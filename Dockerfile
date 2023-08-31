@@ -2,12 +2,16 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-08-31T17:59:55Z by kres d3c3205-dirty.
+# Generated on 2023-09-02T16:54:40Z by kres 431bf4f-dirty.
 
 ARG TOOLCHAIN
 
 # cleaned up specs and compiled versions
 FROM scratch AS generate
+
+FROM ghcr.io/siderolabs/ca-certificates:v1.5.0 AS image-ca-certificates
+
+FROM ghcr.io/siderolabs/fhs:v1.5.0 AS image-fhs
 
 # base toolchain image
 FROM ${TOOLCHAIN} AS toolchain
@@ -46,7 +50,7 @@ COPY go.sum go.sum
 RUN cd .
 RUN --mount=type=cache,target=/go/pkg go mod download
 RUN --mount=type=cache,target=/go/pkg go mod verify
-COPY ./main.go ./main.go
+COPY ./cmd ./cmd
 RUN --mount=type=cache,target=/go/pkg go list -mod=readonly all >/dev/null
 
 # runs gofumpt
@@ -69,6 +73,38 @@ FROM base AS lint-govulncheck
 WORKDIR /src
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg govulncheck ./...
 
+# builds roller-derby-darwin-amd64
+FROM base AS roller-derby-darwin-amd64-build
+COPY --from=generate / /
+WORKDIR /src/cmd/roller-derby
+ARG GO_BUILDFLAGS
+ARG GO_LDFLAGS
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOARCH=amd64 GOOS=darwin go build ${GO_BUILDFLAGS} -ldflags "${GO_LDFLAGS}" -o /roller-derby-darwin-amd64
+
+# builds roller-derby-darwin-arm64
+FROM base AS roller-derby-darwin-arm64-build
+COPY --from=generate / /
+WORKDIR /src/cmd/roller-derby
+ARG GO_BUILDFLAGS
+ARG GO_LDFLAGS
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOARCH=arm64 GOOS=darwin go build ${GO_BUILDFLAGS} -ldflags "${GO_LDFLAGS}" -o /roller-derby-darwin-arm64
+
+# builds roller-derby-linux-amd64
+FROM base AS roller-derby-linux-amd64-build
+COPY --from=generate / /
+WORKDIR /src/cmd/roller-derby
+ARG GO_BUILDFLAGS
+ARG GO_LDFLAGS
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOARCH=amd64 GOOS=linux go build ${GO_BUILDFLAGS} -ldflags "${GO_LDFLAGS}" -o /roller-derby-linux-amd64
+
+# builds roller-derby-linux-arm64
+FROM base AS roller-derby-linux-arm64-build
+COPY --from=generate / /
+WORKDIR /src/cmd/roller-derby
+ARG GO_BUILDFLAGS
+ARG GO_LDFLAGS
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOARCH=arm64 GOOS=linux go build ${GO_BUILDFLAGS} -ldflags "${GO_LDFLAGS}" -o /roller-derby-linux-arm64
+
 # runs unit-tests with race detector
 FROM base AS unit-tests-race
 WORKDIR /src
@@ -81,6 +117,34 @@ WORKDIR /src
 ARG TESTPKGS
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg --mount=type=cache,target=/tmp go test -v -covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} -count 1 ${TESTPKGS}
 
+FROM scratch AS roller-derby-darwin-amd64
+COPY --from=roller-derby-darwin-amd64-build /roller-derby-darwin-amd64 /roller-derby-darwin-amd64
+
+FROM scratch AS roller-derby-darwin-arm64
+COPY --from=roller-derby-darwin-arm64-build /roller-derby-darwin-arm64 /roller-derby-darwin-arm64
+
+FROM scratch AS roller-derby-linux-amd64
+COPY --from=roller-derby-linux-amd64-build /roller-derby-linux-amd64 /roller-derby-linux-amd64
+
+FROM scratch AS roller-derby-linux-arm64
+COPY --from=roller-derby-linux-arm64-build /roller-derby-linux-arm64 /roller-derby-linux-arm64
+
 FROM scratch AS unit-tests
 COPY --from=unit-tests-run /src/coverage.txt /coverage-unit-tests.txt
+
+FROM roller-derby-linux-${TARGETARCH} AS roller-derby
+
+FROM scratch AS roller-derby-all
+COPY --from=roller-derby-darwin-amd64 / /
+COPY --from=roller-derby-darwin-arm64 / /
+COPY --from=roller-derby-linux-amd64 / /
+COPY --from=roller-derby-linux-arm64 / /
+
+FROM scratch AS image-roller-derby
+ARG TARGETARCH
+COPY --from=roller-derby roller-derby-linux-${TARGETARCH} /roller-derby
+COPY --from=image-fhs / /
+COPY --from=image-ca-certificates / /
+LABEL org.opencontainers.image.source https://github.com/siderolabs/roller-derby
+ENTRYPOINT ["/roller-derby"]
 

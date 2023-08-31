@@ -1,7 +1,7 @@
 ---
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-08-31T17:59:55Z by kres d3c3205-dirty.
+# Generated on 2023-09-01T22:50:20Z by kres 431bf4f-dirty.
 
 kind: pipeline
 type: kubernetes
@@ -105,6 +105,23 @@ steps:
   depends_on:
   - unit-tests
 
+- name: roller-derby
+  pull: always
+  image: autonomy/build-container:latest
+  commands:
+  - make roller-derby
+  volumes:
+  - name: outer-docker-socket
+    path: /var/outer-run
+  - name: docker-socket
+    path: /var/run
+  - name: buildx
+    path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
+  depends_on:
+  - base
+
 - name: lint
   pull: always
   image: autonomy/build-container:latest
@@ -121,6 +138,83 @@ steps:
     path: /root/.ssh
   depends_on:
   - base
+
+- name: image-roller-derby
+  pull: always
+  image: autonomy/build-container:latest
+  commands:
+  - make image-roller-derby
+  volumes:
+  - name: outer-docker-socket
+    path: /var/outer-run
+  - name: docker-socket
+    path: /var/run
+  - name: buildx
+    path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
+  depends_on:
+  - roller-derby
+  - lint
+  - unit-tests
+
+- name: push-roller-derby
+  pull: always
+  image: autonomy/build-container:latest
+  commands:
+  - docker login ghcr.io --username "$${GHCR_USERNAME}" --password "$${GHCR_PASSWORD}"
+  - make image-roller-derby
+  environment:
+    GHCR_PASSWORD:
+      from_secret: ghcr_token
+    GHCR_USERNAME:
+      from_secret: ghcr_username
+    PUSH: true
+  volumes:
+  - name: outer-docker-socket
+    path: /var/outer-run
+  - name: docker-socket
+    path: /var/run
+  - name: buildx
+    path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
+  when:
+    event:
+      exclude:
+      - pull_request
+  depends_on:
+  - image-roller-derby
+
+- name: push-roller-derby-latest
+  pull: always
+  image: autonomy/build-container:latest
+  commands:
+  - docker login ghcr.io --username "$${GHCR_USERNAME}" --password "$${GHCR_PASSWORD}"
+  - make image-roller-derby TAG=latest
+  environment:
+    GHCR_PASSWORD:
+      from_secret: ghcr_token
+    GHCR_USERNAME:
+      from_secret: ghcr_username
+    PUSH: true
+  volumes:
+  - name: outer-docker-socket
+    path: /var/outer-run
+  - name: docker-socket
+    path: /var/run
+  - name: buildx
+    path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
+  when:
+    branch:
+    - main
+    event:
+      exclude:
+      - pull_request
+  depends_on:
+  - push-roller-derby
 
 - name: release-notes
   pull: always
@@ -142,6 +236,8 @@ steps:
   depends_on:
   - unit-tests
   - coverage
+  - roller-derby
+  - image-roller-derby
   - lint
 
 - name: release
@@ -184,6 +280,8 @@ services:
   - --log-level=error
   privileged: true
   volumes:
+  - name: dev
+    path: /dev
   - name: outer-docker-socket
     path: /var/outer-run
   - name: docker-socket
@@ -206,6 +304,9 @@ volumes:
 - name: ssh
   temp:
     medium: memory
+- name: dev
+  host:
+    path: /dev
 
 trigger:
   branch:

@@ -1,3 +1,4 @@
+// package main is the entrypoint.
 package main
 
 import "fmt"

@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-08-31T17:59:55Z by kres d3c3205-dirty.
+# Generated on 2023-09-02T16:54:40Z by kres 431bf4f-dirty.
 
 # common variables
 
@@ -112,7 +112,7 @@ else
 GO_LDFLAGS += -s -w
 endif
 
-all: unit-tests lint
+all: unit-tests roller-derby image-roller-derby lint
 
 .PHONY: clean
 clean:  ## Cleans up all artifacts.
@@ -160,8 +160,43 @@ unit-tests-race:  ## Performs unit tests with race detection enabled.
 coverage:  ## Upload coverage data to codecov.io.
 	bash -c "bash <(curl -s https://codecov.io/bash) -f $(ARTIFACTS)/coverage-unit-tests.txt -X fix"
 
+.PHONY: $(ARTIFACTS)/roller-derby-darwin-amd64
+$(ARTIFACTS)/roller-derby-darwin-amd64:
+	@$(MAKE) local-roller-derby-darwin-amd64 DEST=$(ARTIFACTS)
+
+.PHONY: roller-derby-darwin-amd64
+roller-derby-darwin-amd64: $(ARTIFACTS)/roller-derby-darwin-amd64  ## Builds executable for roller-derby-darwin-amd64.
+
+.PHONY: $(ARTIFACTS)/roller-derby-darwin-arm64
+$(ARTIFACTS)/roller-derby-darwin-arm64:
+	@$(MAKE) local-roller-derby-darwin-arm64 DEST=$(ARTIFACTS)
+
+.PHONY: roller-derby-darwin-arm64
+roller-derby-darwin-arm64: $(ARTIFACTS)/roller-derby-darwin-arm64  ## Builds executable for roller-derby-darwin-arm64.
+
+.PHONY: $(ARTIFACTS)/roller-derby-linux-amd64
+$(ARTIFACTS)/roller-derby-linux-amd64:
+	@$(MAKE) local-roller-derby-linux-amd64 DEST=$(ARTIFACTS)
+
+.PHONY: roller-derby-linux-amd64
+roller-derby-linux-amd64: $(ARTIFACTS)/roller-derby-linux-amd64  ## Builds executable for roller-derby-linux-amd64.
+
+.PHONY: $(ARTIFACTS)/roller-derby-linux-arm64
+$(ARTIFACTS)/roller-derby-linux-arm64:
+	@$(MAKE) local-roller-derby-linux-arm64 DEST=$(ARTIFACTS)
+
+.PHONY: roller-derby-linux-arm64
+roller-derby-linux-arm64: $(ARTIFACTS)/roller-derby-linux-arm64  ## Builds executable for roller-derby-linux-arm64.
+
+.PHONY: roller-derby
+roller-derby: roller-derby-darwin-amd64 roller-derby-darwin-arm64 roller-derby-linux-amd64 roller-derby-linux-arm64  ## Builds executables for roller-derby.
+
 .PHONY: lint
 lint: lint-golangci-lint lint-gofumpt lint-govulncheck lint-goimports  ## Run all linters for the project.
+
+.PHONY: image-roller-derby
+image-roller-derby:  ## Builds image for roller-derby.
+	@$(MAKE) target-$@ TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/roller-derby:$(TAG)"
 
 .PHONY: rekres
 rekres:

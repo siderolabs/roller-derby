@@ -1,86 +1,97 @@
 name: default
-on:
-  pull_request:
-    branches:
-    - main
+"on":
   push:
     branches:
-    - main
+      - main
+    tags:
+      - v*
+  pull_request: {}
+env:
+  CI_ARGS: --cache-from=type=registry,ref=registry-registry-dev-talos-systems-io.ci.svc.cluster.local:5000/${GITHUB_REPOSITORY}:buildcache --cache-to=type=registry,ref=registry-registry-dev-talos-systems-io.ci.svc.cluster.local:5000/${GITHUB_REPOSITORY}:buildcache,mode=max
 jobs:
-  setup-ci:
+  default:
+    permissions:
+      contents: write
+      packages: write
     runs-on: self-hosted
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2.2.0
+      - name: Unshallow
+        run: |
+          git fetch --prune --unshallow
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2.9.0
-  base:
-    needs: setup-ci
-    runs-on: self-hosted
-    steps:
+        uses: docker/setup-buildx-action@v2
+        with:
+          config-inline: |
+            [registry."registry-registry-dev-talos-systems-io.ci.svc.cluster.local:5000"]
+              http = true
       - name: base
         run: |
           make base
-  unit-tests:
-    needs: base
-    runs-on: self-hosted
-    steps:
       - name: unit-tests
         run: |
           make unit-tests
-  unit-tests-race:
-    needs: base
-    runs-on: self-hosted
-    steps:
       - name: unit-tests-race
         run: |
           make unit-tests-race
-  coverage:
-    needs: [unit-tests, unit-tests-race]
-    runs-on: self-hosted
-    env:
-      CODECOV_TOKEN: $" secrets.CODECOV_TOKEN "
-    steps:
       - name: coverage
         run: |
           make coverage
-  kres:
-    needs: base
-    runs-on: self-hosted
-    steps:
-      - name: kres
+      - name: roller-derby
         run: |
-          make kres
-  lint:
-    needs: base
-    runs-on: self-hosted
-    steps:
+          make roller-derby
       - name: lint
         run: |
           make lint
-  image-kres:
-    needs: [kres, lint, unit-tests, unit-tests-race]
-    runs-on: self-hosted
-    steps:
-      - name: image-kres
-        run: |
-          make image-kres
-  push-kres:
-    metadata:
-      permissions:
-        packages: write
-    needs: image-kres
-    runs-on: self-hosted
-    if: $" github.event_name != 'pull_request' "
-    steps:
-      - name: Login to GHCR
-        uses: docker/login-action@v2.2.0
+      - name: Login to registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
         with:
+          password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
-          username: $" github.repository_owner "
-          password: $" secrets.GITHUB_TOKEN "
-      - name: push-kres
+          username: ${{ github.repository_owner }}
+      - name: image-roller-derby
         run: |
-          make push-kres
+          make image-roller-derby
+      - name: push-roller-derby
+        if: github.event_name != 'pull_request'
+        env:
+          PLATFORM: linux/amd64,linux/arm64
+          PUSH: "true"
+        run: |
+          make image-roller-derby
+      - name: push-roller-derby-latest
+        if: github.event_name != 'pull_request'
+        env:
+          PLATFORM: linux/amd64,linux/arm64
+          PUSH: "true"
+        run: |
+          make image-roller-derby TAG=latest
+      - name: release-notes
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          make release-notes
+      - name: Generate sha256 checksum
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: jmgilman/actions-generate-checksum@v1
+        with:
+          method: sha256
+          output: _out/sha256sum.txt
+          patterns: |
+            _out/roller-derby-*
+      - name: Generate sha512 checksum
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: jmgilman/actions-generate-checksum@v1
+        with:
+          method: sha512
+          output: _out/sha512sum.txt
+          patterns: |
+            _out/roller-derby-*
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: _out/roller-derby-*,sha*.txt
+          bodyFile: _out/RELEASE_NOTES.md
+          draft: "true"
