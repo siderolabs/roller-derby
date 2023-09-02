@@ -2,10 +2,8 @@
 #
 # Generated on 2023-09-02T18:29:58Z by kres 431bf4f-dirty.
 
-*
-!cmd
-!go.mod
-!go.sum
-!.golangci.yml
-!CHANGELOG.md
-!.markdownlint.json
+{
+    "MD013": false,
+    "MD033": false,
+    "default": true
+  }

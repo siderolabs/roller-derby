@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-09-02T16:54:40Z by kres 431bf4f-dirty.
+# Generated on 2023-09-02T18:29:58Z by kres 431bf4f-dirty.
 
 # common variables
 
@@ -191,8 +191,12 @@ roller-derby-linux-arm64: $(ARTIFACTS)/roller-derby-linux-arm64  ## Builds execu
 .PHONY: roller-derby
 roller-derby: roller-derby-darwin-amd64 roller-derby-darwin-arm64 roller-derby-linux-amd64 roller-derby-linux-arm64  ## Builds executables for roller-derby.
 
+.PHONY: lint-markdown
+lint-markdown:  ## Runs markdownlint.
+	@$(MAKE) target-$@
+
 .PHONY: lint
-lint: lint-golangci-lint lint-gofumpt lint-govulncheck lint-goimports  ## Run all linters for the project.
+lint: lint-golangci-lint lint-gofumpt lint-govulncheck lint-goimports lint-markdown  ## Run all linters for the project.
 
 .PHONY: image-roller-derby
 image-roller-derby:  ## Builds image for roller-derby.

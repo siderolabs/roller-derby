@@ -68,30 +68,19 @@ jobs:
           PUSH: "true"
         run: |
           make image-roller-derby TAG=latest
+      - name: Generate Checksums
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          sha256sum _out/roller-derby-* > _out/sha256sum.txt
+          sha512sum _out/roller-derby-* > _out/sha512sum.txt
       - name: release-notes
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           make release-notes
-      - name: Generate sha256 checksum
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: jmgilman/actions-generate-checksum@v1
-        with:
-          method: sha256
-          output: _out/sha256sum.txt
-          patterns: |
-            _out/roller-derby-*
-      - name: Generate sha512 checksum
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: jmgilman/actions-generate-checksum@v1
-        with:
-          method: sha512
-          output: _out/sha512sum.txt
-          patterns: |
-            _out/roller-derby-*
       - name: Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: ncipollo/release-action@v1
         with:
-          artifacts: _out/roller-derby-*,sha*.txt
+          artifacts: _out/roller-derby-*,_out/sha*.txt
           bodyFile: _out/RELEASE_NOTES.md
           draft: "true"
