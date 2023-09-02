@@ -1,3 +1,33 @@
+## [roller-derby 0.1.0-alpha.1](https://github.com/siderolabs/roller-derby/releases/tag/v0.1.0-alpha.1) (2023-09-02)
+
+Welcome to the v0.1.0-alpha.1 release of roller-derby!  
+*This is a pre-release of roller-derby*
+
+
+
+Please try out the release binaries and report any issues at
+https://github.com/siderolabs/roller-derby/issues.
+
+### Contributors
+
+* Noel Georgi
+
+### Changes
+<details><summary>3 commits</summary>
+<p>
+
+* [`4233dda`](https://github.com/siderolabs/roller-derby/commit/4233ddaf84f3771c537f8e1a1a77a45b99eb3448) chore: revert qemu
+* [`533439c`](https://github.com/siderolabs/roller-derby/commit/533439c9eba0afd0e74d2a65bb4370787ea58bc8) chore: add qemu setup
+* [`915c7c6`](https://github.com/siderolabs/roller-derby/commit/915c7c6c52497a41e9f1d8223a683e2aaab7a3f2) chore: test ci
+</p>
+</details>
+
+### Dependency Changes
+
+This release has no dependency changes
+
+Previous release can be found at [v0.1.0-alpha.0](https://github.com/siderolabs/roller-derby/releases/tag/v0.1.0-alpha.0)
+
 ## [roller-derby 0.1.0-alpha.0](https://github.com/siderolabs/roller-derby/releases/tag/v0.1.0-alpha.0) (2023-09-02)
 
 Welcome to the v0.1.0-alpha.0 release of roller-derby!  
