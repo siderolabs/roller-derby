@@ -7,7 +7,7 @@ name: default
       - v*
   pull_request: {}
 env:
-  CI_ARGS: --cache-from=type=registry,ref=registry-registry-dev-talos-systems-io.ci.svc.cluster.local:5000/${GITHUB_REPOSITORY}:buildcache --cache-to=type=registry,ref=registry-registry-dev-talos-systems-io.ci.svc.cluster.local:5000/${GITHUB_REPOSITORY}:buildcache,mode=max
+  CI_ARGS: --cache-from=type=registry,ref=registry.ci.svc.cluster.local:5000/${GITHUB_REPOSITORY}:buildcache --cache-to=type=registry,ref=registry.ci.svc.cluster.local:5000/${GITHUB_REPOSITORY}:buildcache,mode=max
 jobs:
   default:
     permissions:
@@ -35,8 +35,8 @@ jobs:
               [[worker.oci.gcpolicy]]
                 all = true
                 keepBytes = 107374182400 # 100 GiB
-            [registry."registry-registry-dev-talos-systems-io.ci.svc.cluster.local:5000"]
-              http = true
+            [registry."registry.ci.svc.cluster.local:5000"]
+              ca=["/etc/docker/certs.d/registry.ci.svc.cluster.local:5000/ca.crt"]
       - name: base
         run: |
           make base
