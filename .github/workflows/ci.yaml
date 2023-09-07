@@ -99,7 +99,7 @@ jobs:
         if: always()
         uses: slackapi/slack-github-action@v1
         with:
-          channel-id: proj-talos-maintainers
+          channel-id: CFPLE0Y3D
           payload: |
             {
                 "attachments": [
