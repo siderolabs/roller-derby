@@ -95,13 +95,11 @@ jobs:
           files: |-
             _out/roller-derby-*
             _out/sha*.txt
-      - name: Post to a Slack channel
+      - name: Slack Notify
         if: always()
-        id: slack
-        uses: slackapi/slack-github-action@v1.24.0
+        uses: slackapi/slack-github-action@v1
         with:
-          # https://github.com/slackapi/slack-github-action/issues/203
-          channel-id: 'standup'
+          channel-id: proj-talos-maintainers
           payload: |
             {
                 "attachments": [

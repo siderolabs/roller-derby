@@ -2,16 +2,16 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-09-02T18:29:58Z by kres 431bf4f-dirty.
+# Generated on 2023-09-07T14:54:25Z by kres 3ee0443.
 
 ARG TOOLCHAIN
 
 # cleaned up specs and compiled versions
 FROM scratch AS generate
 
-FROM ghcr.io/siderolabs/ca-certificates:v1.5.0 AS image-ca-certificates
+FROM ghcr.io/siderolabs/ca-certificates:v1.6.0-alpha.0-10-gd3d7d29 AS image-ca-certificates
 
-FROM ghcr.io/siderolabs/fhs:v1.5.0 AS image-fhs
+FROM ghcr.io/siderolabs/fhs:v1.6.0-alpha.0-10-gd3d7d29 AS image-fhs
 
 # runs markdownlint
 FROM docker.io/node:20.5.1-alpine3.18 AS lint-markdown
