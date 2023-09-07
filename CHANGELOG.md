@@ -1,3 +1,34 @@
+## [roller-derby 0.1.0-alpha.3](https://github.com/siderolabs/roller-derby/releases/tag/v0.1.0-alpha.3) (2023-09-07)
+
+Welcome to the v0.1.0-alpha.3 release of roller-derby!  
+*This is a pre-release of roller-derby*
+
+
+
+Please try out the release binaries and report any issues at
+https://github.com/siderolabs/roller-derby/issues.
+
+### Contributors
+
+* Spencer Smith
+* Noel Georgi
+
+### Changes
+<details><summary>3 commits</summary>
+<p>
+
+* [`bd86252`](https://github.com/siderolabs/roller-derby/commit/bd86252edf6ce8ad93d9bf8f03607a69ed858a90) chore: test slack
+* [`e0c0c1f`](https://github.com/siderolabs/roller-derby/commit/e0c0c1f9a5d6d236823594ed6f8f175f752e9fa2) testing again
+* [`787e1be`](https://github.com/siderolabs/roller-derby/commit/787e1be1f60beec4af8817db81135b90cf71afbe) testing
+</p>
+</details>
+
+### Dependency Changes
+
+This release has no dependency changes
+
+Previous release can be found at [v0.1.0-alpha.2](https://github.com/siderolabs/roller-derby/releases/tag/v0.1.0-alpha.2)
+
 ## [roller-derby 0.1.0-alpha.2](https://github.com/siderolabs/roller-derby/releases/tag/v0.1.0-alpha.2) (2023-09-03)
 
 Welcome to the v0.1.0-alpha.2 release of roller-derby!  
