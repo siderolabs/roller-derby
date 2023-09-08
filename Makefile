@@ -39,33 +39,20 @@ PLATFORM ?= linux/amd64
 PROGRESS ?= auto
 PUSH ?= false
 CI_ARGS ?=
-COMMON_ARGS = --file=Dockerfile
+BUILD := docker buildx build
+PLATFORM ?= linux/amd64,linux/arm64
+PROGRESS ?= auto
+SOURCE_DATE_EPOCH ?= "1642703752"
+PUSH ?= false
+COMMON_ARGS := --file=Pkgfile
 COMMON_ARGS += --provenance=false
 COMMON_ARGS += --progress=$(PROGRESS)
 COMMON_ARGS += --platform=$(PLATFORM)
-COMMON_ARGS += --push=$(PUSH)
-COMMON_ARGS += --build-arg=ARTIFACTS="$(ARTIFACTS)"
-COMMON_ARGS += --build-arg=SHA="$(SHA)"
-COMMON_ARGS += --build-arg=TAG="$(TAG)"
-COMMON_ARGS += --build-arg=ABBREV_TAG="$(ABBREV_TAG)"
-COMMON_ARGS += --build-arg=USERNAME="$(USERNAME)"
-COMMON_ARGS += --build-arg=REGISTRY="$(REGISTRY)"
-COMMON_ARGS += --build-arg=TOOLCHAIN="$(TOOLCHAIN)"
-COMMON_ARGS += --build-arg=CGO_ENABLED="$(CGO_ENABLED)"
-COMMON_ARGS += --build-arg=GO_BUILDFLAGS="$(GO_BUILDFLAGS)"
-COMMON_ARGS += --build-arg=GO_LDFLAGS="$(GO_LDFLAGS)"
-COMMON_ARGS += --build-arg=GOTOOLCHAIN="$(GOTOOLCHAIN)"
-COMMON_ARGS += --build-arg=GOEXPERIMENT="$(GOEXPERIMENT)"
-COMMON_ARGS += --build-arg=PROTOBUF_GO_VERSION="$(PROTOBUF_GO_VERSION)"
-COMMON_ARGS += --build-arg=GRPC_GO_VERSION="$(GRPC_GO_VERSION)"
-COMMON_ARGS += --build-arg=GRPC_GATEWAY_VERSION="$(GRPC_GATEWAY_VERSION)"
-COMMON_ARGS += --build-arg=VTPROTOBUF_VERSION="$(VTPROTOBUF_VERSION)"
-COMMON_ARGS += --build-arg=DEEPCOPY_VERSION="$(DEEPCOPY_VERSION)"
-COMMON_ARGS += --build-arg=GOLANGCILINT_VERSION="$(GOLANGCILINT_VERSION)"
-COMMON_ARGS += --build-arg=GOIMPORTS_VERSION="$(GOIMPORTS_VERSION)"
-COMMON_ARGS += --build-arg=GOFUMPT_VERSION="$(GOFUMPT_VERSION)"
-COMMON_ARGS += --build-arg=TESTPKGS="$(TESTPKGS)"
-TOOLCHAIN ?= docker.io/golang:1.21-alpine
+COMMON_ARGS += --build-arg=http_proxy=$(http_proxy)
+COMMON_ARGS += --build-arg=https_proxy=$(https_proxy)
+COMMON_ARGS += --build-arg=SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH)
+COMMON_ARGS += --build-arg=TAG=$(TAG)
+COMMON_ARGS += --build-arg=PKGS=$(PKGS)
 
 # help menu
 
@@ -118,113 +105,35 @@ else
 GO_LDFLAGS += -s -w
 endif
 
-all: unit-tests roller-derby image-roller-derby lint
+TARGETS = dummy
+
+all: $(TARGETS)
+
+.PHONY: $(TARGETS)
+$(TARGETS):
+	@if [ $(CI) ] && [ $(PUSH) = "true" ]; then \
+		$(MAKE) docker-$@ TARGET_ARGS="--tag=$(REGISTRY_AND_USERNAME)/$@:$(TAG)-$(subst linux/,,$(PLATFORM)) --push=$(PUSH)"; \
+	else \
+		$(MAKE) docker-$@ TARGET_ARGS="--tag=$(REGISTRY_AND_USERNAME)/$@:$(TAG) --push=$(PUSH)"; \
+	fi
+
+push: ## Pushes all images built by this Makefile to the registry.
+	@$(foreach target,$(TARGETS),crane index append -t $(REGISTRY)/$(USERNAME)/$(target):$(TAG) -m $(REGISTRY)/$(USERNAME)/$(target):$(TAG)-amd64 -m $(REGISTRY)/$(USERNAME)/$(target):$(TAG)-arm64;)
+	@$(foreach target,$(TARGETS),crane push $(REGISTRY)/$(USERNAME)/$(target):$(TAG) ghcr.io/siderolabs/$(target):$(TAG);)
 
 .PHONY: clean
 clean:  ## Cleans up all artifacts.
 	@rm -rf $(ARTIFACTS)
 
-target-%:  ## Builds the specified target defined in the Dockerfile. The build result will only remain in the build cache.
-	@$(BUILD) --target=$* $(COMMON_ARGS) $(TARGET_ARGS) $(CI_ARGS) .
-
-local-%:  ## Builds the specified target defined in the Dockerfile using the local output type. The build result will be output to the specified local destination.
+local-%: ## Builds the specified target defined in the Dockerfile using the local output type. The build result will be output to the specified local destination.
 	@$(MAKE) target-$* TARGET_ARGS="--output=type=local,dest=$(DEST) $(TARGET_ARGS)"
+	@PLATFORM=$(PLATFORM) \
 
-lint-golangci-lint:  ## Runs golangci-lint linter.
-	@$(MAKE) target-$@
+target-%: ## Builds the specified target defined in the Dockerfile. The build result will only remain in the build cache.
+	@$(BUILD) \
+		--target=$* \
+		$(COMMON_ARGS) \
+		$(TARGET_ARGS) .
 
-lint-gofumpt:  ## Runs gofumpt linter.
-	@$(MAKE) target-$@
-
-.PHONY: fmt
-fmt:  ## Formats the source code
-	@docker run --rm -it -v $(PWD):/src -w /src golang:$(GO_VERSION) \
-		bash -c "export GOEXPERIMENT=loopvar; export GOTOOLCHAIN=local; \
-		export GO111MODULE=on; export GOPROXY=https://proxy.golang.org; \
-		go install mvdan.cc/gofumpt@$(GOFUMPT_VERSION) && \
-		gofumpt -w ."
-
-lint-govulncheck:  ## Runs govulncheck linter.
-	@$(MAKE) target-$@
-
-lint-goimports:  ## Runs goimports linter.
-	@$(MAKE) target-$@
-
-.PHONY: base
-base:  ## Prepare base toolchain
-	@$(MAKE) target-$@
-
-.PHONY: unit-tests
-unit-tests:  ## Performs unit tests
-	@$(MAKE) local-$@ DEST=$(ARTIFACTS)
-
-.PHONY: unit-tests-race
-unit-tests-race:  ## Performs unit tests with race detection enabled.
-	@$(MAKE) target-$@
-
-.PHONY: coverage
-coverage:  ## Upload coverage data to codecov.io.
-	bash -c "bash <(curl -s https://codecov.io/bash) -f $(ARTIFACTS)/coverage-unit-tests.txt -X fix"
-
-.PHONY: $(ARTIFACTS)/roller-derby-darwin-amd64
-$(ARTIFACTS)/roller-derby-darwin-amd64:
-	@$(MAKE) local-roller-derby-darwin-amd64 DEST=$(ARTIFACTS)
-
-.PHONY: roller-derby-darwin-amd64
-roller-derby-darwin-amd64: $(ARTIFACTS)/roller-derby-darwin-amd64  ## Builds executable for roller-derby-darwin-amd64.
-
-.PHONY: $(ARTIFACTS)/roller-derby-darwin-arm64
-$(ARTIFACTS)/roller-derby-darwin-arm64:
-	@$(MAKE) local-roller-derby-darwin-arm64 DEST=$(ARTIFACTS)
-
-.PHONY: roller-derby-darwin-arm64
-roller-derby-darwin-arm64: $(ARTIFACTS)/roller-derby-darwin-arm64  ## Builds executable for roller-derby-darwin-arm64.
-
-.PHONY: $(ARTIFACTS)/roller-derby-linux-amd64
-$(ARTIFACTS)/roller-derby-linux-amd64:
-	@$(MAKE) local-roller-derby-linux-amd64 DEST=$(ARTIFACTS)
-
-.PHONY: roller-derby-linux-amd64
-roller-derby-linux-amd64: $(ARTIFACTS)/roller-derby-linux-amd64  ## Builds executable for roller-derby-linux-amd64.
-
-.PHONY: $(ARTIFACTS)/roller-derby-linux-arm64
-$(ARTIFACTS)/roller-derby-linux-arm64:
-	@$(MAKE) local-roller-derby-linux-arm64 DEST=$(ARTIFACTS)
-
-.PHONY: roller-derby-linux-arm64
-roller-derby-linux-arm64: $(ARTIFACTS)/roller-derby-linux-arm64  ## Builds executable for roller-derby-linux-arm64.
-
-.PHONY: roller-derby
-roller-derby: roller-derby-darwin-amd64 roller-derby-darwin-arm64 roller-derby-linux-amd64 roller-derby-linux-arm64  ## Builds executables for roller-derby.
-
-.PHONY: lint-markdown
-lint-markdown:  ## Runs markdownlint.
-	@$(MAKE) target-$@
-
-.PHONY: lint
-lint: lint-golangci-lint lint-gofumpt lint-govulncheck lint-goimports lint-markdown  ## Run all linters for the project.
-
-.PHONY: image-roller-derby
-image-roller-derby:  ## Builds image for roller-derby.
-	@$(MAKE) target-$@ TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/roller-derby:$(TAG)"
-
-.PHONY: rekres
-rekres:
-	@docker pull $(KRES_IMAGE)
-	@docker run --rm -v $(PWD):/src -w /src -e GITHUB_TOKEN $(KRES_IMAGE)
-
-.PHONY: help
-help:  ## This help menu.
-	@echo "$$HELP_MENU_HEADER"
-	@grep -E '^[a-zA-Z%_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-
-.PHONY: release-notes
-release-notes:
-	mkdir -p $(ARTIFACTS)
-	@ARTIFACTS=$(ARTIFACTS) ./hack/release.sh $@ $(ARTIFACTS)/RELEASE_NOTES.md $(TAG)
-
-.PHONY: conformance
-conformance:
-	@docker pull $(CONFORMANCE_IMAGE)
-	@docker run --rm -it -v $(PWD):/src -w /src $(CONFORMANCE_IMAGE) enforce
-
+docker-%: ## Builds the specified target defined in the Dockerfile using the docker output type. The build result will be loaded into docker.
+	@$(MAKE) target-$* TARGET_ARGS="$(TARGET_ARGS)"

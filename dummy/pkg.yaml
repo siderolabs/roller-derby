@@ -1,0 +1,8 @@
+name: dummy
+steps:
+  - build:
+      - |
+        touch foo
+finalize:
+  - from: /
+    to: /

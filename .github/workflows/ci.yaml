@@ -1,7 +1,3 @@
-# THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
-#
-# Generated on 2023-09-18T10:59:04Z by kres 90499df-dirty.
-
 name: default
 "on":
   push:
@@ -16,16 +12,23 @@ name: default
       - release-*
 jobs:
   default:
+    strategy:
+      matrix:
+        include:
+          - runner: X64
+            platform: linux/amd64
+          - runner: ARM64
+            platform: linux/arm64
     permissions:
-      contents: write
       packages: write
     runs-on:
       - self-hosted
-      - X64
+      - ${{ matrix.runner }}
     if: ${{ !startsWith(github.head_ref, 'renovate/') || !startsWith(github.head_ref, 'renovate/') }}
     steps:
       - name: checkout
         uses: actions/checkout@v3
+      - uses: imjasonh/setup-crane@v0.3
       - name: Unshallow
         run: |
           git fetch --prune --unshallow
@@ -44,24 +47,9 @@ jobs:
               [[worker.oci.gcpolicy]]
                 all = true
                 keepBytes = 107374182400 # 100 GiB
-      - name: base
+      - name: build
         run: |
-          make base
-      - name: unit-tests
-        run: |
-          make unit-tests
-      - name: unit-tests-race
-        run: |
-          make unit-tests-race
-      - name: coverage
-        run: |
-          make coverage
-      - name: roller-derby
-        run: |
-          make roller-derby
-      - name: lint
-        run: |
-          make lint
+          make PLATFORM=${{ matrix.platform }}
       - name: Login to registry
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v2
@@ -69,38 +57,17 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-      - name: image-roller-derby
-        run: |
-          make image-roller-derby
-      - name: push-roller-derby
+      - name: push-local
         if: github.event_name != 'pull_request'
-        env:
-          PLATFORM: linux/amd64,linux/arm64
-          PUSH: "true"
         run: |
-          make image-roller-derby
-      - name: push-roller-derby-latest
+          make PLATFORM=${{ matrix.platform }}
+        env:
+          PUSH: true
+          REGISTRY: registry.dev.siderolabs.io
+      - name: push
         if: github.event_name != 'pull_request'
+        run: |
+          make push
         env:
-          PLATFORM: linux/amd64,linux/arm64
-          PUSH: "true"
-        run: |
-          make image-roller-derby TAG=latest
-      - name: Generate Checksums
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          sha256sum _out/roller-derby-* > _out/sha256sum.txt
-          sha512sum _out/roller-derby-* > _out/sha512sum.txt
-      - name: release-notes
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          make release-notes
-      - name: Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: crazy-max/ghaction-github-release@v1
-        with:
-          body_path: _out/RELEASE_NOTES.md
-          draft: "true"
-          files: |-
-            _out/roller-derby-*
-            _out/sha*.txt
+          PUSH: true
+          REGISTRY: registry.dev.siderolabs.io
