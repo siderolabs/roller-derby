@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-09-17T20:55:24Z by kres 1953ab7-dirty.
+# Generated on 2023-09-18T09:40:36Z by kres 979d5c8-dirty.
 
 name: default
 "on":
@@ -13,8 +13,6 @@ name: default
     branches:
       - main
       - release-*
-env:
-  CI_ARGS: --cache-from=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache-${GITHUB_REF_NAME} --cache-from=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache-main --cache-to=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache-${GITHUB_REF_NAME},mode=max
 jobs:
   default:
     permissions:
