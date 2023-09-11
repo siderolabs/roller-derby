@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: print data
         run: |
-          echo ${{ fromJSON(github.event.workflow_run) }}
+          echo ${{ toJson(github.event.workflow_run) }}
       - name: Slack Notify
         if: always()
         uses: slackapi/slack-github-action@v1
