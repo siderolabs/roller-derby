@@ -9,6 +9,7 @@ name: default
 env:
   CI_ARGS: --cache-from=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache --cache-to=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache,mode=max
 jobs:
+  if: '!(startsWith(github.base_ref, "renovate/") || startsWith(github.base_ref, "dependabot/"))'
   default:
     permissions:
       contents: write
