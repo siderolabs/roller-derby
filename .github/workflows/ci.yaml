@@ -10,7 +10,7 @@ env:
   CI_ARGS: --cache-from=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache --cache-to=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache,mode=max
 jobs:
   default:
-    if: '!contains(fromJSON('["renovate/", "dependabot/"]'), github.base_ref)'
+    if: contains(fromJSON('["renovate/", "dependabot/"]'), github.base_ref)
     permissions:
       contents: write
       packages: write
