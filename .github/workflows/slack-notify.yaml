@@ -8,8 +8,10 @@ jobs:
     runs-on: [self-hosted, X64]
     steps:
       - name: print data
+        env:
+            GITHUB_CONTEXT: ${{ toJson(github.event.workflow_run) }}
         run: |
-          echo ${{ toJson(github.event.workflow_run) }}
+          echo "$GITHUB_CONTEXT"
       - name: Slack Notify
         if: always()
         uses: slackapi/slack-github-action@v1
