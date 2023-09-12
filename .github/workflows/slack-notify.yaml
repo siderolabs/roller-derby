@@ -21,7 +21,7 @@ jobs:
             {
                 "attachments": [
                     {
-                        "color": "${{ github.event.workflow_run.event == 'success' && '#2EB886' || github.event.workflow_run.event == 'failure' && '#A30002' || '#FFCC00' }}",
+                        "color": "${{ github.event.workflow_run.conclusion == 'success' && '#2EB886' || github.event.workflow_run.conclusion == 'failure' && '#A30002' || '#FFCC00' }}",
                         "fallback": "test",
                         "blocks": [
                             {
@@ -33,7 +33,7 @@ jobs:
                                     },
                                     {
                                         "type": "mrkdwn",
-                                        "text": "*Status:*\n`${{ github.event.workflow_run.event }}`"
+                                        "text": "*Status:*\n`${{ github.event.workflow_run.conclusion }}`"
                                     }
                                 ]
                             },
@@ -62,7 +62,7 @@ jobs:
                                             "type": "plain_text",
                                             "text": "Logs"
                                         },
-                                        "url": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
+                                        "url": "${{ github.event.workflow_run.html_url }}"
                                     },
                                     {
                                         "type": "button",
