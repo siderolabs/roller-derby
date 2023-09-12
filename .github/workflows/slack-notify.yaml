@@ -19,7 +19,7 @@ jobs:
             {
                 "attachments": [
                     {
-                        "color": "${{ jobs.default.status == 'success' && '#2EB886' || jobs.default.status == 'failure' && '#A30002' || '#FFCC00' }}",
+                        "color": "${{ needs.default.outputs.status == 'success' && '#2EB886' || needs.default.outputs.status == 'failure' && '#A30002' || '#FFCC00' }}",
                         "fallback": "test",
                         "blocks": [
                             {
@@ -31,7 +31,7 @@ jobs:
                                     },
                                     {
                                         "type": "mrkdwn",
-                                        "text": "*Status:*\n`${{ jobs.default.status }}`"
+                                        "text": "*Status:*\n`${{ needs.default.outputs.status }}`"
                                     }
                                 ]
                             },

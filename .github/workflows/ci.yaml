@@ -2,6 +2,7 @@ name: default
 "on":
   push:
     branches:
+      - main
     tags:
       - v*
   pull_request: {}
@@ -16,6 +17,16 @@ jobs:
     runs-on:
       - self-hosted
       - X64
+    outputs:
+      status: ${{ job.status }}
+      event: ${{ github.event_name }}
+      actor: ${{ github.actor }}
+      repo: ${{ github.repository }}
+      base_ref: ${{ github.base_ref }}
+      pull_request_url: ${{ github.event.pull_request.html_url }}
+      pull_request_title: ${{ github.event.pull_request.title }}
+      commit_sha: ${{ github.sha }}
+      ref_name: ${{ github.ref_name }}
     steps:
       - name: checkout
         uses: actions/checkout@v3
