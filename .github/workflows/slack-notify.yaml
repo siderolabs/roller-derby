@@ -1,13 +1,8 @@
+name: slack-notify
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - v*
-  pull_request_target: {}
+  workflow_call:
 jobs:
   slack-notify:
-    needs: default
     if: always()
     runs-on: [self-hosted, X64]
     steps:

@@ -33,3 +33,8 @@ jobs:
       - name: Unshallow
         run: |
           git fetch --prune --unshallow
+
+  slack:
+    needs: [default]
+    uses: ./.github/workflows/slack-notify.yaml
+    secrets: inherit
