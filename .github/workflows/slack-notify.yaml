@@ -1,19 +1,12 @@
 on:
-  workflow_run:
-    workflows: [default]
-    types:
-      - completed
+  pull_request_target: {}
 jobs:
   slack-notify:
+    needs: default
+    if: always()
     runs-on: [self-hosted, X64]
     steps:
-      - name: print data
-        env:
-            GITHUB_CONTEXT: ${{ toJson(github.event.workflow_run) }}
-        run: |
-          echo "$GITHUB_CONTEXT"
       - name: Slack Notify
-        if: always()
         uses: slackapi/slack-github-action@v1
         with:
           channel-id: proj-talos-maintainers
@@ -21,7 +14,7 @@ jobs:
             {
                 "attachments": [
                     {
-                        "color": "${{ job.status == 'success' && '#2EB886' || job.status == 'failure' && '#A30002' || '#FFCC00' }}",
+                        "color": "${{ jobs.default.status == 'success' && '#2EB886' || jobs.default.status == 'failure' && '#A30002' || '#FFCC00' }}",
                         "fallback": "test",
                         "blocks": [
                             {
@@ -33,7 +26,7 @@ jobs:
                                     },
                                     {
                                         "type": "mrkdwn",
-                                        "text": "*Status:*\n`${{ job.status }}`"
+                                        "text": "*Status:*\n`${{ jobs.default.status }}`"
                                     }
                                 ]
                             },
