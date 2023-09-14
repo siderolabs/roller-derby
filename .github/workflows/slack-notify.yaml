@@ -30,7 +30,7 @@ jobs:
                                 "fields": [
                                     {
                                         "type": "mrkdwn",
-                                        "text": "${{ github.event.workflow_run.event == 'pull_request' && format('*Pull Request:* {0} (`{1}`)\n<https://{2}/pulls/{3}|{4}>', github.repository, github.ref_name, github.repository, steps.get-pr-info.outputs.pullRequestNumber, github.event.workflow_run.display_title) || format('*Build:* {0}#{1} (`{2}`)', github.repository, github.sha, github.ref_name) }}"
+                                        "text": "${{ github.event.workflow_run.event == 'pull_request' && format('*Pull Request:* {0} (`{1}`)\n<{2}/pulls/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, steps.get-pr-info.outputs.pullRequestNumber, github.event.workflow_run.display_title) || format('*Build:* {0}#{1} (`{2}`)', github.repository, github.sha, github.ref_name) }}"
                                     },
                                     {
                                         "type": "mrkdwn",
@@ -81,4 +81,3 @@ jobs:
             }
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
