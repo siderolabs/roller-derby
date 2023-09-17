@@ -1,3 +1,7 @@
+# THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
+#
+# Generated on 2023-09-17T20:55:24Z by kres 1953ab7-dirty.
+
 name: default
 "on":
   push:
@@ -5,31 +9,99 @@ name: default
       - main
     tags:
       - v*
-  pull_request: {}
+  pull_request:
+    branches:
+      - main
+      - release-*
 env:
-  CI_ARGS: --cache-from=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache --cache-to=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache,mode=max
+  CI_ARGS: --cache-from=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache-${GITHUB_REF_NAME} --cache-from=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache-main --cache-to=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache-${GITHUB_REF_NAME},mode=max
 jobs:
   default:
-    if: ${{ !startsWith(github.head_ref, 'renovate/') || !startsWith(github.head_ref, 'renovate/') }}
     permissions:
       contents: write
       packages: write
     runs-on:
       - self-hosted
       - X64
-    outputs:
-      status: ${{ job.status }}
-      event: ${{ github.event_name }}
-      actor: ${{ github.actor }}
-      repo: ${{ github.repository }}
-      base_ref: ${{ github.base_ref }}
-      pull_request_url: ${{ github.event.pull_request.html_url }}
-      pull_request_title: ${{ github.event.pull_request.title }}
-      commit_sha: ${{ github.sha }}
-      ref_name: ${{ github.ref_name }}
+    if: ${{ !startsWith(github.head_ref, 'renovate/') || !startsWith(github.head_ref, 'renovate/') }}
     steps:
       - name: checkout
         uses: actions/checkout@v3
       - name: Unshallow
         run: |
           git fetch --prune --unshallow
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          config-inline: |
+            [worker.oci]
+              gc = true
+              gckeepstorage = 100000 # 100 GiB
+
+              [[worker.oci.gcpolicy]]
+                keepBytes = 32212254720 # 30 GiB
+                keepDuration = 604800
+                filters = [ "type==source.local", "type==exec.cachemount", "type==source.git.checkout"]
+              [[worker.oci.gcpolicy]]
+                all = true
+                keepBytes = 107374182400 # 100 GiB
+      - name: base
+        run: |
+          make base
+      - name: unit-tests
+        run: |
+          make unit-tests
+      - name: unit-tests-race
+        run: |
+          make unit-tests-race
+      - name: coverage
+        run: |
+          make coverage
+      - name: roller-derby
+        run: |
+          make roller-derby
+      - name: lint
+        run: |
+          make lint
+      - name: Login to registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
+        with:
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+      - name: image-roller-derby
+        run: |
+          make image-roller-derby
+      - name: push-roller-derby
+        if: github.event_name != 'pull_request'
+        env:
+          PLATFORM: linux/amd64,linux/arm64
+          PUSH: "true"
+        run: |
+          make image-roller-derby
+      - name: push-roller-derby-latest
+        if: github.event_name != 'pull_request'
+        env:
+          PLATFORM: linux/amd64,linux/arm64
+          PUSH: "true"
+        run: |
+          make image-roller-derby TAG=latest
+      - name: Generate Checksums
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          sha256sum _out/roller-derby-* > _out/sha256sum.txt
+          sha512sum _out/roller-derby-* > _out/sha512sum.txt
+      - name: release-notes
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          make release-notes
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: crazy-max/ghaction-github-release@v1
+        with:
+          body_path: _out/RELEASE_NOTES.md
+          draft: "true"
+          files: |-
+            _out/roller-derby-*
+            _out/sha*.txt

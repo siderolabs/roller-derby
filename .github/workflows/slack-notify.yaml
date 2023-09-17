@@ -1,19 +1,25 @@
+# THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
+#
+# Generated on 2023-09-17T20:55:24Z by kres 1953ab7-dirty.
+
 name: slack-notify
-on:
+"on":
   workflow_run:
-    workflows: [default]
+    workflows:
+      - default
     types:
       - completed
 jobs:
   slack-notify:
-    runs-on: [self-hosted, X64]
+    runs-on:
+      - self-hosted
     steps:
-      - name: get-info
-        id: get-pr-info
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          sourceRunId: ${{ github.event.workflow_run.id }}
+      - name: Retrieve Workflow Run Info
+        id: retrieve-workflow-run-info
         uses: potiuk/get-workflow-origin@v1
+        with:
+          sourceRunId: ${{ github.event.workflow_run.id }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Slack Notify
         uses: slackapi/slack-github-action@v1
         with:
@@ -30,7 +36,7 @@ jobs:
                                 "fields": [
                                     {
                                         "type": "mrkdwn",
-                                        "text": "${{ github.event.workflow_run.event == 'pull_request' && format('*Pull Request:* {0} (`{1}`)\n<{2}/pull/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, steps.get-pr-info.outputs.pullRequestNumber, github.event.workflow_run.display_title) || format('*Build:* {0}#{1} (`{2}`)', github.repository, github.sha, github.ref_name) }}"
+                                        "text": "${{ github.event.workflow_run.event == 'pull_request' && format('*Pull Request:* {0} (`{1}`)\n<{2}/pull/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, steps.retrieve-workflow-run-info.outputs.pullRequestNumber, github.event.workflow_run.display_title) || format('*Build:* {0}#{1} (`{2}`)', github.repository, github.sha, github.ref_name) }}"
                                     },
                                     {
                                         "type": "mrkdwn",
