@@ -1,20 +1,19 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-09-17T20:55:24Z by kres 1953ab7-dirty.
+# Generated on 2023-09-18T10:59:04Z by kres 90499df-dirty.
 
 name: default
 "on":
   push:
     branches:
       - main
+      - release-*
     tags:
       - v*
   pull_request:
     branches:
       - main
       - release-*
-env:
-  CI_ARGS: --cache-from=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache-${GITHUB_REF_NAME} --cache-from=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache-main --cache-to=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache-${GITHUB_REF_NAME},mode=max
 jobs:
   default:
     permissions:

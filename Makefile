@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-09-07T14:54:25Z by kres 3ee0443.
+# Generated on 2023-09-18T10:59:04Z by kres 90499df-dirty.
 
 # common variables
 
@@ -16,13 +16,13 @@ USERNAME ?= siderolabs
 REGISTRY_AND_USERNAME ?= $(REGISTRY)/$(USERNAME)
 PROTOBUF_GO_VERSION ?= 1.31.0
 GRPC_GO_VERSION ?= 1.3.0
-GRPC_GATEWAY_VERSION ?= 2.17.1
-VTPROTOBUF_VERSION ?= 0.4.0
+GRPC_GATEWAY_VERSION ?= 2.18.0
+VTPROTOBUF_VERSION ?= 0.5.0
 DEEPCOPY_VERSION ?= v0.5.5
 GOLANGCILINT_VERSION ?= v1.54.2
 GOFUMPT_VERSION ?= v0.5.0
-GO_VERSION ?= 1.21
-GOIMPORTS_VERSION ?= v0.12.0
+GO_VERSION ?= 1.21.1
+GOIMPORTS_VERSION ?= v0.13.0
 GO_BUILDFLAGS ?=
 GO_LDFLAGS ?=
 CGO_ENABLED ?= 0
@@ -99,6 +99,12 @@ The registry and username can be overridden by exporting REGISTRY, and USERNAME
 respectively.
 
 endef
+
+ifneq (, $(filter $(CI), t true TRUE y yes 1))
+GITHUB_BRANCH := $(subst /,-,${GITHUB_HEAD_REF})
+GITHUB_BRANCH := $(subst +,-,$(GITHUB_BRANCH))
+CI_ARGS := --cache-from=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache-main --cache-from=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache-$(GITHUB_BRANCH) --cache-to=type=registry,ref=registry.dev.siderolabs.io/${GITHUB_REPOSITORY}:buildcache-$(GITHUB_BRANCH),mode=max
+endif
 
 ifneq (, $(filter $(WITH_RACE), t true TRUE y yes 1))
 GO_BUILDFLAGS += -race
