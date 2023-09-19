@@ -19,8 +19,6 @@ jobs:
             platform: linux/amd64
           - runner: ARM64
             platform: linux/arm64
-    permissions:
-      packages: write
     runs-on:
       - self-hosted
       - ${{ matrix.runner }}
@@ -28,7 +26,6 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - uses: imjasonh/setup-crane@v0.3
       - name: Unshallow
         run: |
           git fetch --prune --unshallow
@@ -64,6 +61,20 @@ jobs:
         env:
           PUSH: true
           REGISTRY: registry.dev.siderolabs.io
+  push:
+    if: github.event_name != 'pull_request'
+    needs: [default]
+    permissions:
+      packages: write
+    runs-on:
+      - self-hosted
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - uses: imjasonh/setup-crane@v0.3
+      - name: Unshallow
+        run: |
+          git fetch --prune --unshallow
       - name: push
         if: github.event_name != 'pull_request'
         run: |
