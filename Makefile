@@ -118,8 +118,8 @@ $(TARGETS):
 	fi
 
 push: ## Pushes all images built by this Makefile to the registry.
-	@$(foreach target,$(TARGETS),crane index append -t $(REGISTRY)/$(USERNAME)/$(target):$(TAG) -m $(REGISTRY)/$(USERNAME)/$(target):$(TAG)-amd64 -m $(REGISTRY)/$(USERNAME)/$(target):$(TAG)-arm64;)
-	@$(foreach target,$(TARGETS),crane push $(REGISTRY)/$(USERNAME)/$(target):$(TAG) ghcr.io/siderolabs/$(target):$(TAG);)
+	$(foreach target,$(TARGETS),crane index append -t $(REGISTRY)/$(USERNAME)/$(target):$(TAG) -m $(REGISTRY)/$(USERNAME)/$(target):$(TAG)-amd64 -m $(REGISTRY)/$(USERNAME)/$(target):$(TAG)-arm64;)
+	$(foreach target,$(TARGETS),crane push $(REGISTRY)/$(USERNAME)/$(target):$(TAG) ghcr.io/siderolabs/$(target):$(TAG);)
 
 .PHONY: clean
 clean:  ## Cleans up all artifacts.
