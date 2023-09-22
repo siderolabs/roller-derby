@@ -44,6 +44,8 @@ jobs:
               [[worker.oci.gcpolicy]]
                 all = true
                 keepBytes = 107374182400 # 100 GiB
+          driver: remote
+          endpoint: tcp://buildkit-amd64.ci.svc.cluster.local:1234
       - name: build
         run: |
           make PLATFORM=${{ matrix.platform }}
