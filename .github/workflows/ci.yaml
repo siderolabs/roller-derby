@@ -1,3 +1,7 @@
+# THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
+#
+# Generated on 2023-09-27T09:35:08Z by kres e52eb75-dirty.
+
 name: default
 "on":
   push:
@@ -12,17 +16,13 @@ name: default
       - release-*
 jobs:
   default:
-    strategy:
-      matrix:
-        include:
-          - runner: X64
-            platform: linux/amd64
-          - runner: ARM64
-            platform: linux/arm64
+    permissions:
+      contents: write
+      packages: write
     runs-on:
       - self-hosted
-      - ${{ matrix.runner }}
-    if: ${{ !startsWith(github.head_ref, 'renovate/') || !startsWith(github.head_ref, 'renovate/') }}
+      - X64
+    if: ${{ !startsWith(github.head_ref, 'renovate/') || !startsWith(github.head_ref, 'dependabot/') }}
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -32,23 +32,26 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          config-inline: |
-            [worker.oci]
-              gc = true
-              gckeepstorage = 100000 # 100 GiB
-
-              [[worker.oci.gcpolicy]]
-                keepBytes = 32212254720 # 30 GiB
-                keepDuration = 604800
-                filters = [ "type==source.local", "type==exec.cachemount", "type==source.git.checkout"]
-              [[worker.oci.gcpolicy]]
-                all = true
-                keepBytes = 107374182400 # 100 GiB
           driver: remote
-          endpoint: tcp://buildkit-amd64.ci.svc.cluster.local:1234
-      - name: build
+          endpoint: tcp://localhost:1234
+      - name: base
         run: |
-          make PLATFORM=${{ matrix.platform }}
+          make base
+      - name: unit-tests
+        run: |
+          make unit-tests
+      - name: unit-tests-race
+        run: |
+          make unit-tests-race
+      - name: coverage
+        run: |
+          make coverage
+      - name: roller-derby
+        run: |
+          make roller-derby
+      - name: lint
+        run: |
+          make lint
       - name: Login to registry
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v2
@@ -56,31 +59,46 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-      - name: push-local
+      - name: image-roller-derby
+        run: |
+          make image-roller-derby
+      - name: push-roller-derby
         if: github.event_name != 'pull_request'
-        run: |
-          make PLATFORM=${{ matrix.platform }}
         env:
-          PUSH: true
-          REGISTRY: registry.dev.siderolabs.io
-  push:
-    if: github.event_name != 'pull_request'
-    needs: [default]
-    permissions:
-      packages: write
-    runs-on:
-      - self-hosted
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - uses: imjasonh/setup-crane@v0.3
-      - name: Unshallow
+          PLATFORM: linux/amd64,linux/arm64
+          PUSH: "true"
         run: |
-          git fetch --prune --unshallow
-      - name: push
+          make image-roller-derby
+      - name: push-roller-derby-latest
         if: github.event_name != 'pull_request'
-        run: |
-          make push
         env:
-          PUSH: true
-          REGISTRY: registry.dev.siderolabs.io
+          PLATFORM: linux/amd64,linux/arm64
+          PUSH: "true"
+        run: |
+          make image-roller-derby TAG=latest
+      - name: Generate Checksums
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          sha256sum _out/roller-derby-* > _out/sha256sum.txt
+          sha512sum _out/roller-derby-* > _out/sha512sum.txt
+      - name: release-notes
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          make release-notes
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: crazy-max/ghaction-github-release@v1
+        with:
+          body_path: _out/RELEASE_NOTES.md
+          draft: "true"
+          files: |-
+            _out/roller-derby-*
+            _out/sha*.txt
+    services:
+      buildkitd:
+        image: buildx-stable-1-rootless
+        ports:
+          - 1234:1234
+        volumes:
+          - /var/lib/buildkit/${{ github.repository }}:/var/lib/buildkit
+          - /usr/etc/buildkit/buildkitd.toml:/etc/buildkit/buildkitd.toml
