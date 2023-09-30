@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-09-27T09:35:08Z by kres e52eb75-dirty.
+# Generated on 2023-09-30T13:40:45Z by kres e52eb75-dirty.
 
 name: slack-notify
 "on":
@@ -13,6 +13,7 @@ jobs:
   slack-notify:
     runs-on:
       - self-hosted
+      - generic
     if: ${{ github.event.workflow_run.conclusion != 'skipped' }}
     steps:
       - name: Retrieve Workflow Run Info
@@ -50,7 +51,7 @@ jobs:
                                 "fields": [
                                     {
                                         "type": "mrkdwn",
-                                        "text": "*Author:*\n`${{ github.triggering_actor }}`"
+                                        "text": "*Author:*\n`${{ github.actor }}`"
                                     },
                                     {
                                         "type": "mrkdwn",
