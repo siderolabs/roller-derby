@@ -34,10 +34,9 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - name: Unshallow
+      - name: test
         run: |
-          echo "${{ toJSON(github.event) }}"
-          echo "${{ (!startsWith(github.head_ref, 'renovate/') || !startsWith(github.head_ref, 'dependabot/')) && (github.event.action != 'labeled' || github.event.label.name == 'e2e') }}"
+          echo "${{ github.event.label == null && github.head_ref || github.run_id }}"
   test:
     needs:
       - default
