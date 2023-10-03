@@ -14,11 +14,6 @@ concurrency:
     tags:
       - v*
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - labeled
     branches:
       - main
       - release-*
@@ -30,21 +25,27 @@ jobs:
     runs-on:
       - self-hosted
       - generic
-    if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/')) && (github.event.label == null || (github.event.label.name == 'e2e' || github.event.label.name == 'e2e-test'))
+    if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - name: Unshallow
+      - name: test
         run: |
-          echo "${{ toJSON(github.event) }}"
-          echo "${{ (!startsWith(github.head_ref, 'renovate/') || !startsWith(github.head_ref, 'dependabot/')) && (github.event.action != 'labeled' || github.event.label.name == 'e2e') }}"
+          echo "${{ github.event.label == null && github.head_ref || github.run_id }}"
+      - name: retrieve labels
+        uses: potiuk/get-workflow-origin@v1_5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+        id: workflow-run-info
+    outputs:
+      labels: ${{ steps.workflow-run-info.outputs.pullRequestLabels }}
   test:
+    if: contains(needs.default.outputs.labels, 'integration/short')
     needs:
       - default
     runs-on:
       - self-hosted
       - generic
-    if: contains(github.event.pull_request.labels.*.name, 'e2e') || contains(github.event.pull_request.labels.*.name, 'e2e-test')
     steps:
       - name: checkout
         uses: actions/checkout@v3
