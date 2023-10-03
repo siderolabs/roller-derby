@@ -30,7 +30,7 @@ jobs:
     runs-on:
       - self-hosted
       - generic
-    if: ${{ (!startsWith(github.head_ref, 'renovate/') || !startsWith(github.head_ref, 'dependabot/')) && (github.event.label == null || (github.event.label.name == 'e2e' || github.event.label.name == 'e2e-test')) }}
+    if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/')) && (github.event.label == null || (github.event.label.name == 'e2e' || github.event.label.name == 'e2e-test'))
     steps:
       - name: checkout
         uses: actions/checkout@v3
