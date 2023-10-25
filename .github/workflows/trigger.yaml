@@ -24,9 +24,6 @@ jobs:
     outputs:
       sha: ${{ steps.retrieve-workflow-run-info.outputs.sourceHeadSha }}
   downstream:
-    runs-on:
-      - self-hosted
-      - generic
     needs:
       - trigger
     uses: ./.github/workflows/reuse.yaml
