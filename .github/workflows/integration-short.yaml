@@ -1,0 +1,17 @@
+on:
+  workflow_dispatch:
+    inputs:
+      commitSHA:
+        description: 'Commit SHA'
+        required: true
+jobs:
+  short:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.commitSHA }}
+      - name: Run tests
+        run: |
+          echo "Running tests"
