@@ -29,4 +29,4 @@ jobs:
     runs-on:
       - self-hosted
       - generic
-    uses: ${{ format('{0}/.github/workflows/reuse@{1}', github.repository, needs.trigger.outputs.sha) }}
+    uses: ${{ format('{0}/.github/workflows/reuse.yaml@{1}', github.repository, needs.trigger.outputs.sha) }}
