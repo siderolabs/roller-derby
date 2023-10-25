@@ -26,4 +26,4 @@ jobs:
   downstream:
     needs:
       - trigger
-    uses: ./.github/workflows/reuse.yaml
+    uses: ${{ format('{0}/.github/workflows/reuse.yaml@{1}', github.repository, needs.trigger.outputs.sha) }}
