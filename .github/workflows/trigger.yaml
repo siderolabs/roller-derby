@@ -12,9 +12,6 @@ jobs:
       - generic
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     steps:
-      - name: echo event
-        run: |
-          echo "${{ toJSON(github.event) }}"
       - name: Retrieve Workflow Run Info
         id: retrieve-workflow-run-info
         uses: potiuk/get-workflow-origin@v1_5
