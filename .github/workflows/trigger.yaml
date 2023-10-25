@@ -21,3 +21,12 @@ jobs:
       - name: print labels
         run: |
           echo "${{ toJSON(steps.retrieve-workflow-run-info.outputs) }}"
+    outputs:
+      sha: ${{ steps.retrieve-workflow-run-info.outputs.sourceHeadSha }}
+  downstream:
+    needs:
+      - trigger
+    runs-on:
+      - self-hosted
+      - generic
+    uses: ${{ format('{0}/.github/workflows/reuse@{1}', github.repository, needs.trigger.outputs.sha) }}
