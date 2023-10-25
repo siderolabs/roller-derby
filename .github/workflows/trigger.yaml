@@ -1,0 +1,26 @@
+name: trigger
+on:
+  workflow_run:
+    workflows:
+      - default
+    types:
+      - completed
+jobs:
+  trigger:
+    runs-on:
+      - self-hosted
+      - generic
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: echo event
+        run: |
+          echo "${{ toJSON(github.event) }}"
+      - name: Retrieve Workflow Run Info
+        id: retrieve-workflow-run-info
+        uses: potiuk/get-workflow-origin@v1_5
+        with:
+          sourceRunId: ${{ github.event.workflow_run.id }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: print labels
+        run: |
+          echo "${{ toJSON(steps.retrieve-workflow-run-info.outputs) }}"
