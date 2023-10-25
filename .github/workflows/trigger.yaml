@@ -24,10 +24,10 @@ jobs:
     outputs:
       sha: ${{ steps.retrieve-workflow-run-info.outputs.sourceHeadSha }}
   downstream:
+    uses: ./.github/workflows/reuse.yaml
     needs:
       - trigger
     runs-on:
       - self-hosted
       - generic
     # uses: ${{ format('{0}/.github/workflows/reuse.yaml@{1}', github.repository, needs.trigger.outputs.sha) }}
-    uses: ./.github/workflows/reuse.yaml
