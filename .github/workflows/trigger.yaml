@@ -21,9 +21,14 @@ jobs:
       - name: print labels
         run: |
           echo "${{ toJSON(steps.retrieve-workflow-run-info.outputs) }}"
-    outputs:
-      sha: ${{ steps.retrieve-workflow-run-info.outputs.sourceHeadSha }}
-  downstream:
-    needs:
-      - trigger
-    uses: ${{ github.repository/.github/workflows/reuse.yaml/needs.trigger.outputs.sha }}
+      - name: Invoke workflow without inputs
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: dispatch.yaml
+          ref: ${{ steps.retrieve-workflow-run-info.outputs.sourceHeadSha }}
+  #   outputs:
+  #     sha: ${{ steps.retrieve-workflow-run-info.outputs.sourceHeadSha }}
+  # downstream:
+  #   needs:
+  #     - trigger
+  #   uses: ${{ github.repository/.github/workflows/reuse.yaml/needs.trigger.outputs.sha }}
