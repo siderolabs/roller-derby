@@ -37,6 +37,8 @@ jobs:
         volumes:
           - /var/lib/buildkit/${{ github.repository }}:/var/lib/buildkit
           - /usr/etc/buildkit/buildkitd.toml:/etc/buildkit/buildkitd.toml
+    outputs:
+      labels: ${{ steps.workflow-run-info.outputs.pullRequestLabels }}
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -90,6 +92,11 @@ jobs:
           PUSH: "true"
         run: |
           make image-roller-derby TAG=latest
+      - name: Retrieve workflow info
+        id: workflow-run-info
+        uses: potiuk/get-workflow-origin@v1_5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Generate Checksums
         if: startsWith(github.ref, 'refs/tags/')
         run: |
@@ -108,3 +115,13 @@ jobs:
           files: |-
             _out/roller-derby-*
             _out/sha*.txt
+  test:
+    runs-on:
+      - self-hosted
+      - generic
+    needs:
+      - default
+    if: contains(needs.default.outputs.labels, 'e2e-test')
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
