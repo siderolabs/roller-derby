@@ -19,11 +19,6 @@ concurrency:
       - release-*
 jobs:
   default:
-    permissions:
-      actions: read
-      contents: read
-      packages: write
-      pull-requests: read
     runs-on:
       - self-hosted
       - generic
