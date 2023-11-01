@@ -19,6 +19,12 @@ concurrency:
       - release-*
 jobs:
   default:
+    permissions:
+      actions: read
+      contents: write
+      packages: write
+      pull-requests: read
+      id-token: write
     runs-on:
       - self-hosted
       - generic
@@ -33,20 +39,37 @@ jobs:
           - /var/lib/buildkit/${{ github.repository }}:/var/lib/buildkit
           - /usr/etc/buildkit/buildkitd.toml:/etc/buildkit/buildkitd.toml
     outputs:
-      labels: ${{ steps.workflow-run-info.outputs.pullRequestLabels }}
+      labels: ${{ steps.set-result.outputs.result }}
     steps:
       - name: checkout
         uses: actions/checkout@v4
+      - name: fail
+        run: |
+          exit 1
       - name: Save PR number
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && always()
         run: |
           echo ${{ github.event.number }} > pr-number.txt
       - name: Upload PR number
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && always()
         uses: actions/upload-artifact@v3
         with:
           name: pr-number
           path: pr-number.txt
+      - id: set-result
+        uses: actions/github-script@v6
+        with:
+          retries: 3
+          script: |
+            const result = await github.rest.issues.get({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            })
+
+            return result.data.labels
+      - name: Get result
+        run: echo '${{ steps.set-result.outputs.result }}'
       - name: Generate Checksums
         if: startsWith(github.ref, 'refs/tags/')
         run: |
