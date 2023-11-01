@@ -16,6 +16,9 @@ jobs:
       - generic
     if: ${{ github.event.workflow_run.conclusion != 'skipped' }}
     steps:
+      - name: echo result
+        run: |
+            echo ${{ toJSON(github.event.workflow_run) }}
       - name: Retrieve Workflow Run Info
         id: retrieve-workflow-run-info
         uses: potiuk/get-workflow-origin@v1_5
