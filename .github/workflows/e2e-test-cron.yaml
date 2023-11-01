@@ -4,7 +4,7 @@ concurrency:
   cancel-in-progress: true
 "on":
   schedule:
-    - cron: * * * * *
+    - cron: */5 * * * *
 jobs:
   default:
     runs-on:
