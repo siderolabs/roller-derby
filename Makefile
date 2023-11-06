@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-10-27T13:35:24Z by kres latest.
+# Generated on 2023-11-07T04:48:44Z by kres ab55a67-dirty.
 
 # common variables
 
@@ -19,7 +19,7 @@ GRPC_GO_VERSION ?= 1.3.0
 GRPC_GATEWAY_VERSION ?= 2.18.0
 VTPROTOBUF_VERSION ?= 0.5.0
 DEEPCOPY_VERSION ?= v0.5.5
-GOLANGCILINT_VERSION ?= v1.55.1
+GOLANGCILINT_VERSION ?= v1.55.2
 GOFUMPT_VERSION ?= v0.5.0
 GO_VERSION ?= 1.21.3
 GOIMPORTS_VERSION ?= v0.14.0
@@ -112,7 +112,7 @@ else
 GO_LDFLAGS += -s -w
 endif
 
-all: unit-tests roller-derby image-roller-derby lint
+all: unit-tests roller-derby image-roller-derby dummy lint
 
 .PHONY: clean
 clean:  ## Cleans up all artifacts.
@@ -202,10 +202,14 @@ lint: lint-golangci-lint lint-gofumpt lint-govulncheck lint-goimports lint-markd
 image-roller-derby:  ## Builds image for roller-derby.
 	@$(MAKE) target-$@ TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/roller-derby:$(TAG)"
 
+.PHONY: dummy
+dummy:
+	echo dummy
+
 .PHONY: rekres
 rekres:
 	@docker pull $(KRES_IMAGE)
-	@docker run --rm --net=host -v $(PWD):/src -w /src -e GITHUB_TOKEN $(KRES_IMAGE)
+	@docker run --rm --net=host --user $(shell id -u):$(shell id -g) -v $(PWD):/src -w /src -e GITHUB_TOKEN $(KRES_IMAGE)
 
 .PHONY: help
 help:  ## This help menu.

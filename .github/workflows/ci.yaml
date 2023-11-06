@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-10-27T13:35:24Z by kres latest.
+# Generated on 2023-11-07T05:01:09Z by kres ab55a67-dirty.
 
 name: default
 concurrency:
@@ -19,34 +19,108 @@ concurrency:
       - release-*
 jobs:
   default:
+    permissions:
+      actions: read
+      contents: write
+      issues: read
+      packages: write
+      pull-requests: read
     runs-on:
       - self-hosted
       - generic
     if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))
+    outputs:
+      labels: ${{ steps.retrieve-pr-labels.outputs.result }}
     services:
       buildkitd:
-        image: moby/buildkit:v0.12.2
+        image: moby/buildkit:v0.12.3
         options: --privileged
         ports:
           - 1234:1234
         volumes:
           - /var/lib/buildkit/${{ github.repository }}:/var/lib/buildkit
           - /usr/etc/buildkit/buildkitd.toml:/etc/buildkit/buildkitd.toml
-    outputs:
-      labels: ${{ steps.workflow-run-info.outputs.pullRequestLabels }}
     steps:
       - name: checkout
         uses: actions/checkout@v4
+      - name: Unshallow
+        run: |
+          git fetch --prune --unshallow
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: remote
+          endpoint: tcp://localhost:1234
       - name: Save PR number
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && always()
         run: |
           echo ${{ github.event.number }} > pr-number.txt
       - name: Upload PR number
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && always()
         uses: actions/upload-artifact@v3
         with:
           name: pr-number
           path: pr-number.txt
+          retention-days: "1"
+      - name: base
+        run: |
+          make base
+      - name: unit-tests
+        run: |
+          make unit-tests
+      - name: unit-tests-race
+        run: |
+          make unit-tests-race
+      - name: coverage
+        run: |
+          make coverage
+      - name: roller-derby
+        run: |
+          make roller-derby
+      - name: lint
+        run: |
+          make lint
+      - name: Login to registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+      - name: image-roller-derby
+        run: |
+          make image-roller-derby
+      - name: push-roller-derby
+        if: github.event_name != 'pull_request'
+        env:
+          PLATFORM: linux/amd64,linux/arm64
+          PUSH: "true"
+        run: |
+          make image-roller-derby
+      - name: push-roller-derby-latest
+        if: github.event_name != 'pull_request'
+        env:
+          PLATFORM: linux/amd64,linux/arm64
+          PUSH: "true"
+        run: |
+          make image-roller-derby TAG=latest
+      - name: dummy
+        run: |
+          make dummy
+      - name: Retrieve PR labels
+        id: retrieve-pr-labels
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v6
+        with:
+          retries: "3"
+          script: |
+            const resp = await github.rest.issues.get({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+            })
+
+            return resp.data.labels
       - name: Generate Checksums
         if: startsWith(github.ref, 'refs/tags/')
         run: |
@@ -65,13 +139,61 @@ jobs:
           files: |-
             _out/roller-derby-*
             _out/sha*.txt
-  test:
+  dummy:
     runs-on:
       - self-hosted
-      - generic
+    if: contains(needs.default.outputs.labels, 'integration/e2e') || contains(needs.default.outputs.labels, 'integration/dummy')
     needs:
       - default
-    if: contains(needs.default.outputs.labels, 'e2e-test')
+    services:
+      buildkitd:
+        image: moby/buildkit:v0.12.3
+        options: --privileged
+        ports:
+          - 1234:1234
+        volumes:
+          - /var/lib/buildkit/${{ github.repository }}:/var/lib/buildkit
+          - /usr/etc/buildkit/buildkitd.toml:/etc/buildkit/buildkitd.toml
     steps:
       - name: checkout
         uses: actions/checkout@v4
+      - name: Unshallow
+        run: |
+          git fetch --prune --unshallow
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: remote
+          endpoint: tcp://localhost:1234
+      - name: dummy
+        run: |
+          make dummy
+  dummy-a:
+    runs-on:
+      - self-hosted
+    if: contains(needs.default.outputs.labels, 'integration/e2e') || contains(needs.default.outputs.labels, 'integration/dummy-a')
+    needs:
+      - default
+    services:
+      buildkitd:
+        image: moby/buildkit:v0.12.3
+        options: --privileged
+        ports:
+          - 1234:1234
+        volumes:
+          - /var/lib/buildkit/${{ github.repository }}:/var/lib/buildkit
+          - /usr/etc/buildkit/buildkitd.toml:/etc/buildkit/buildkitd.toml
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: Unshallow
+        run: |
+          git fetch --prune --unshallow
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: remote
+          endpoint: tcp://localhost:1234
+      - name: dummy
+        run: |
+          make dummy

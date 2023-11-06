@@ -25,8 +25,29 @@ spec:
       GOOS: darwin
       GOARCH: arm64
 ---
-kind: common.Release
-name: release
+kind: auto.CustomSteps
 spec:
-  artifacts:
-    - roller-derby-*
+  steps:
+    - name: dummy
+      toplevel: true
+---
+kind: custom.Step
+name: dummy
+spec:
+  makefile:
+    enabled: true
+    phony: true
+    script:
+      - |
+        echo dummy
+  ghaction:
+    enabled: true
+    jobs:
+      - name: dummy
+        triggerLabels:
+          - integration/e2e
+          - integration/dummy
+      - name: dummy-a
+        triggerLabels:
+          - integration/e2e
+          - integration/dummy-a
