@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: echo
         run: |
-          echo "${{ fromJSON(github.event) }}"
+          echo "${{ toJSON(github) }}"
       - name: Retrieve Workflow Run Info
         id: retrieve-workflow-run-info
         uses: potiuk/get-workflow-origin@v1_5
