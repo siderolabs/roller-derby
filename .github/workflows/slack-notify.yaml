@@ -39,9 +39,9 @@ jobs:
             let fs = require('fs');
             fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/pr-number.zip`, Buffer.from(download.data));
       - name: Get PR number
-          id: get-pr-number
-          if: github.event.workflow_run.event == 'pull_request'
-          run: |
+        id: get-pr-number
+        if: github.event.workflow_run.event == 'pull_request'
+        run: |
             unzip pr-number.zip
             echo pull_request_number=$(cat pr-number.txt) >> $GITHUB_OUTPUT
       - name: Slack Notify
