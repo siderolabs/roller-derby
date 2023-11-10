@@ -16,6 +16,12 @@ jobs:
       - generic
     if: github.event.workflow_run.conclusion != 'skipped'
     steps:
+      - name: Install the gh cli
+        uses: ksivamuthu/actions-setup-gh-cli@v2
+      - name: get workflow info
+        run: |
+          echo "gh run view -R ${{ github.repository }} ${{ github.event.workflow_run.id }}"
+          gh run view -R ${{ github.repository }} ${{ github.event.workflow_run.id }}
       - name: Download PR artifact
         if: github.event.workflow_run.event == 'pull_request'
         uses: actions/github-script@v6
