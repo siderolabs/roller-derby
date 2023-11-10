@@ -19,6 +19,8 @@ jobs:
       - name: Install the gh cli
         uses: ksivamuthu/actions-setup-gh-cli@v2
       - name: get workflow info
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo "gh run view -R ${{ github.repository }} ${{ github.event.workflow_run.id }}"
           gh run view -R ${{ github.repository }} ${{ github.event.workflow_run.id }}
