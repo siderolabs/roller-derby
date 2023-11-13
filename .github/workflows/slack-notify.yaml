@@ -22,8 +22,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo "gh run view -R ${{ github.repository }} ${{ github.event.workflow_run.id }}"
-          gh run view -R ${{ github.repository }} ${{ github.event.workflow_run.id }}
+          echo gh pr view -R "${{ github.repository }}" "${{ github.event.workflow_run.head_repository.owner.login }}:${{ github.event.workflow_run.head_branch }}" --json "number" --jq ".number"
+          gh pr view -R "${{ github.repository }}" "${{ github.event.workflow_run.head_repository.owner.login }}:${{ github.event.workflow_run.head_branch }}" --json "number" --jq ".number"
       - name: Download PR artifact
         if: github.event.workflow_run.event == 'pull_request'
         uses: actions/github-script@v6
