@@ -30,13 +30,14 @@ jobs:
       - generic
     if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))
     outputs:
-      labels: ${{ steps.retrieve-pr-labels.outputs.result }}
+      labels: ${{ github.event.name == 'pull_request' && steps.retrieve-pr-labels.outputs.result || '[]' }}
     steps:
       - name: checkout
         uses: actions/checkout@v4
       - name: Retrieve PR labels
         id: retrieve-pr-labels
         uses: actions/github-script@v6
+        if: github.event_name == 'pull_request' && always()
         with:
           retries: "3"
           script: |
