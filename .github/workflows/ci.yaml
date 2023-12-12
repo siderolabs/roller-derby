@@ -48,6 +48,9 @@ jobs:
             })
 
             return resp.data.labels.map(label => label.name)
+      - name: echo
+        run: |
+          echo "${{ steps.retrieve-pr-labels.outputs  }}"
   dummy:
     runs-on:
       - self-hosted
