@@ -1,0 +1,17 @@
+name: Ok To Test
+
+on:
+  pull_request_target:
+
+jobs:
+  ok-to-test:
+    runs-on:
+      - self-hosted
+      - generic
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+      with:
+        path: workflows
+    - name: ci
+      uses: ./workflows/.github/workflows/ci.yaml

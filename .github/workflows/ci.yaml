@@ -3,17 +3,12 @@ concurrency:
   group: ${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 on:
-  repository_dispatch:
-    types: [ok-to-test-command]
+  workflow_call:
 jobs:
   default:
     runs-on:
       - self-hosted
       - generic
-    permissions:
-      pull-requests: write
-      checks: write
-    if: github.event_name == 'repository_dispatch' && contains(github.event.client_payload.pull_request.head.sha)
     steps:
     - run: |
         echo "Integration tests... success! ;-)"
