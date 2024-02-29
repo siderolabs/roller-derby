@@ -13,11 +13,7 @@ jobs:
     permissions:
       pull-requests: write
       checks: write
-    if: |
-      github.event_name == 'repository_dispatch' &&
-      contains(
-        github.event.client_payload.pull_request.head.sha,
-      )
+    if: github.event_name == 'repository_dispatch' && contains(github.event.client_payload.pull_request.head.sha)
     steps:
     - run: |
         echo "Integration tests... success! ;-)"
