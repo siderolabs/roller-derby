@@ -11,6 +11,9 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v4
+    - name: echo
+      run: |
+        echo ${{ toJSON(github.event.pull_request) }}
     - name: workflow_dispatch
       uses: benc-uk/workflow-dispatch@v1
       with:
