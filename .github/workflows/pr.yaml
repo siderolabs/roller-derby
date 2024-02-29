@@ -12,6 +12,7 @@ jobs:
     - name: checkout
       uses: actions/checkout@v4
     - name: workflow_dispatch
+      uses: benc-uk/workflow-dispatch@v1
       with:
         workflow: ci.yaml
         ref: ${{ github.event.pull_request.head.ref }}
