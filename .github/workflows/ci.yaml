@@ -48,6 +48,7 @@ jobs:
         with:
           driver: remote
           endpoint: tcp://127.0.0.1:1234
+          buildkitd-flags: --debug
         timeout-minutes: 1
       - name: base
         run: |
