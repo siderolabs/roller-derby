@@ -1,13 +1,13 @@
 ---
-kind: auto.CI
-spec:
-    provider: ghaction
----
 kind: common.Image
 name: image-roller-derby
 spec:
     extraEnvironment:
       PLATFORM: linux/amd64,linux/arm64
+---
+kind: service.CodeCov
+spec:
+  enabled: false
 ---
 kind: golang.Build
 spec:
