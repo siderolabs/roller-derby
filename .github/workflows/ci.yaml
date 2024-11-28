@@ -37,7 +37,10 @@ jobs:
         uses: kenchan0130/actions-system-info@v1.3.0
         continue-on-error: true
       - name: print-system-info
+        env:
+          STEP_NAME: ${{ github.job}}-gather-system-info
         run: |
+          env; exit 1
           MEMORY_GB=$((${{ steps.system-info.outputs.totalmem }}/1024/1024/1024))
 
           OUTPUTS=(
