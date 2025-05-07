@@ -5,6 +5,10 @@ spec:
     extraEnvironment:
       PLATFORM: linux/amd64,linux/arm64
 ---
+kind: golang.Generate
+spec:
+  versionPackagePath: internal/version
+---
 kind: service.CodeCov
 spec:
   enabled: false
