@@ -1,10 +1,10 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-05-07T06:21:30Z by kres 1a0156b-dirty.
+# Generated on 2025-05-07T06:36:31Z by kres 1a0156b-dirty.
 
 name: helm
 concurrency:
-  group: ${{ github.head_ref || github.run_id }}
+  group: helm-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 "on":
   push:
@@ -71,7 +71,7 @@ jobs:
       - name: Template chart
         if: github.event_name == 'pull_request'
         run: |
-          helm template -f deploy/helm/roller-derby/values.yaml deploy/helm/roller-derby roller-derby
+          helm template -f deploy/helm/roller-derby/values.yaml roller-derby deploy/helm/roller-derby
       - name: helm login
         if: startsWith(github.ref, 'refs/tags/')
         run: |
