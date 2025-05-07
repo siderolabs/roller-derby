@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-05-07T06:14:53Z by kres 1a0156b-dirty.
+# Generated on 2025-05-07T07:28:58Z by kres 1a0156b-dirty.
 
 # common variables
 
@@ -241,7 +241,7 @@ image-roller-derby:  ## Builds image for roller-derby.
 	@$(MAKE) registry-$@ IMAGE_NAME="roller-derby"
 
 .PHONY: helm
-helm: generate  ## Package helm chart
+helm:  ## Package helm chart
 	@helm package deploy/helm/roller-derby -d $(ARTIFACTS)
 
 .PHONY: helm-release
