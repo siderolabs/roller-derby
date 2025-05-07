@@ -15,7 +15,7 @@ concurrency:
       - main
       - release-*
     paths:
-      - deploy/helm/roller-derby
+      - deploy/helm/**
 jobs:
   default:
     runs-on:
