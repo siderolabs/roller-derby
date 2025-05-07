@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-05-07T06:11:20Z by kres 1a0156b-dirty.
+# Generated on 2025-05-07T06:14:53Z by kres 1a0156b-dirty.
 
 # common variables
 
@@ -33,6 +33,8 @@ CGO_ENABLED ?= 0
 GOTOOLCHAIN ?= local
 GOEXPERIMENT ?= synctest
 TESTPKGS ?= ./...
+HELMREPO ?= $(REGISTRY)/$(USERNAME)/charts
+COSIGN_ARGS ?=
 KRES_IMAGE ?= ghcr.io/siderolabs/kres:latest
 CONFORMANCE_IMAGE ?= ghcr.io/siderolabs/conform:latest
 
@@ -136,7 +138,7 @@ else
 GO_LDFLAGS += -s
 endif
 
-all: unit-tests roller-derby image-roller-derby lint
+all: unit-tests roller-derby image-roller-derby helm lint
 
 $(ARTIFACTS):  ## Creates artifacts directory.
 	@mkdir -p $(ARTIFACTS)
@@ -165,6 +167,7 @@ local-%:  ## Builds the specified target defined in the Dockerfile using the loc
 
 generate:  ## Generate .proto definitions.
 	@$(MAKE) local-$@ DEST=./
+	@sed -i "s/appVersion: .*/appVersion: \"$$(cat internal/version/data/tag)\"/" deploy/helm/roller-derby/Chart.yaml
 
 lint-golangci-lint:  ## Runs golangci-lint linter.
 	@$(MAKE) target-$@
@@ -236,6 +239,15 @@ lint: lint-golangci-lint lint-gofumpt lint-govulncheck lint-markdown  ## Run all
 .PHONY: image-roller-derby
 image-roller-derby:  ## Builds image for roller-derby.
 	@$(MAKE) registry-$@ IMAGE_NAME="roller-derby"
+
+.PHONY: helm
+helm: generate  ## Package helm chart
+	@helm package deploy/helm/roller-derby -d $(ARTIFACTS)
+
+.PHONY: helm-release
+helm-release: helm  ## Release helm chart
+	@helm push $(ARTIFACTS)/roller-derby-*.tgz oci://$(HELMREPO) 2>&1 | tee $(ARTIFACTS)/.digest
+	@cosign sign --yes $(COSING_ARGS) $(HELMREPO)/roller-derby@$$(cat $(ARTIFACTS)/.digest | awk -F "[, ]+" '/Digest/{print $$NF}')
 
 .PHONY: dummy
 dummy:

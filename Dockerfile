@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-05-07T06:11:20Z by kres 1a0156b-dirty.
+# Generated on 2025-05-07T06:14:53Z by kres 1a0156b-dirty.
 
 ARG TOOLCHAIN
 
@@ -53,6 +53,7 @@ RUN cd .
 RUN --mount=type=cache,target=/go/pkg,id=roller-derby/go/pkg go mod download
 RUN --mount=type=cache,target=/go/pkg,id=roller-derby/go/pkg go mod verify
 COPY ./cmd ./cmd
+COPY ./internal ./internal
 RUN --mount=type=cache,target=/go/pkg,id=roller-derby/go/pkg go list -mod=readonly all >/dev/null
 
 FROM tools AS embed-generate

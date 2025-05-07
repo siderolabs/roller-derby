@@ -9,6 +9,11 @@ kind: golang.Generate
 spec:
   versionPackagePath: internal/version
 ---
+kind: auto.Helm
+spec:
+  enabled: true
+  chartDir: deploy/helm/roller-derby
+---
 kind: service.CodeCov
 spec:
   enabled: false

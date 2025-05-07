@@ -1,9 +1,10 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-11-07T04:26:26Z by kres ab55a67-dirty.
+# Generated on 2025-05-07T06:14:53Z by kres 1a0156b-dirty.
 
 *
 !cmd
+!internal
 !go.mod
 !go.sum
 !.golangci.yml
