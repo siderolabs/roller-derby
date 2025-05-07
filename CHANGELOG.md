@@ -1,3 +1,29 @@
+## [roller-derby 0.1.0-alpha.7](https://github.com/siderolabs/roller-derby/releases/tag/v0.1.0-alpha.7) (2025-05-07)
+
+Welcome to the v0.1.0-alpha.7 release of roller-derby!  
+*This is a pre-release of roller-derby*
+
+
+
+Please try out the release binaries and report any issues at
+https://github.com/siderolabs/roller-derby/issues.
+
+### Contributors
+
+
+### Changes
+<details><summary>0 commit</summary>
+<p>
+
+</p>
+</details>
+
+### Dependency Changes
+
+This release has no dependency changes
+
+Previous release can be found at [v0.1.0-alpha.6](https://github.com/siderolabs/roller-derby/releases/tag/v0.1.0-alpha.6)
+
 ## [roller-derby 0.1.0-alpha.6](https://github.com/siderolabs/roller-derby/releases/tag/v0.1.0-alpha.6) (2025-05-07)
 
 Welcome to the v0.1.0-alpha.6 release of roller-derby!  

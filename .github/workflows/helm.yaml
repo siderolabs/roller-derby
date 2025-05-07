@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-05-07T07:18:47Z by kres 1a0156b-dirty.
+# Generated on 2025-05-07T07:24:05Z by kres 1a0156b-dirty.
 
 name: helm
 concurrency:
@@ -75,12 +75,12 @@ jobs:
       - name: helm login
         if: startsWith(github.ref, 'refs/tags/')
         env:
-          HELM_CONFIG_HOME: /run/user/runner/.config/helm
+          HELM_CONFIG_HOME: /var/tmp/.config/helm
         run: |
           helm registry login -u ${{ github.repository_owner }} -p ${{ secrets.GITHUB_TOKEN }} ghcr.io
       - name: Release chart
         if: startsWith(github.ref, 'refs/tags/')
         env:
-          HELM_CONFIG_HOME: /run/user/runner/.config/helm
+          HELM_CONFIG_HOME: /var/tmp/.config/helm
         run: |
           make helm-release
