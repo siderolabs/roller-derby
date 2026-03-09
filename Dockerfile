@@ -1,26 +1,38 @@
-# syntax = docker/dockerfile-upstream:1.15.1-labs
+# syntax = docker/dockerfile-upstream:1.21.0-labs
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-05-07T06:14:53Z by kres 1a0156b-dirty.
+# Generated on 2026-03-09T17:33:53Z by kres f613471-dirty.
 
-ARG TOOLCHAIN
+ARG TOOLCHAIN=scratch
 
-FROM ghcr.io/siderolabs/ca-certificates:v1.10.0 AS image-ca-certificates
+# helm toolchain
+FROM --platform=${BUILDPLATFORM} ${TOOLCHAIN} AS helm-toolchain
+ARG HELMDOCS_VERSION
+RUN --mount=type=cache,target=/root/.cache/go-build,id=roller-derby/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=roller-derby/go/pkg go install github.com/norwoodj/helm-docs/cmd/helm-docs@${HELMDOCS_VERSION} \
+	&& mv /go/bin/helm-docs /bin/helm-docs
 
-FROM ghcr.io/siderolabs/fhs:v1.10.0 AS image-fhs
+FROM ghcr.io/siderolabs/ca-certificates:v1.12.0 AS image-ca-certificates
+
+FROM ghcr.io/siderolabs/fhs:v1.12.0 AS image-fhs
 
 # runs markdownlint
-FROM docker.io/oven/bun:1.2.12-alpine AS lint-markdown
+FROM docker.io/oven/bun:1.3.10-alpine AS lint-markdown
 WORKDIR /src
-RUN bun i markdownlint-cli@0.44.0 sentences-per-line@0.3.0
+RUN bun i markdownlint-cli@0.47.0 sentences-per-line@0.5.2
 COPY .markdownlint.json .
 COPY ./CHANGELOG.md ./CHANGELOG.md
-RUN bunx markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --rules sentences-per-line .
+RUN bunx markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --rules markdownlint-sentences-per-line .
 
 # base toolchain image
 FROM --platform=${BUILDPLATFORM} ${TOOLCHAIN} AS toolchain
-RUN apk --update --no-cache add bash curl build-base protoc protobuf-dev
+RUN apk --update --no-cache add bash build-base curl jq protoc protobuf-dev
+
+# runs helm-docs
+FROM helm-toolchain AS helm-docs-run
+WORKDIR /src
+COPY deploy/helm/roller-derby /src/deploy/helm/roller-derby
+RUN --mount=type=cache,target=/root/.cache/go-build,id=roller-derby/root/.cache/go-build --mount=type=cache,target=/root/.cache/helm-docs,id=roller-derby/root/.cache/helm-docs,sharing=locked helm-docs --badge-style=flat
 
 # build tools
 FROM --platform=${BUILDPLATFORM} toolchain AS tools
@@ -43,6 +55,10 @@ RUN --mount=type=cache,target=/root/.cache/go-build,id=roller-derby/root/.cache/
 ARG GOFUMPT_VERSION
 RUN go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
 	&& mv /go/bin/gofumpt /bin/gofumpt
+
+# clean helm-docs output
+FROM scratch AS helm-docs
+COPY --from=helm-docs-run /src/deploy/helm/roller-derby deploy/helm/roller-derby
 
 # tools and sources
 FROM tools AS base
@@ -75,28 +91,41 @@ COPY .golangci.yml .
 ENV GOGC=50
 RUN --mount=type=cache,target=/root/.cache/go-build,id=roller-derby/root/.cache/go-build --mount=type=cache,target=/root/.cache/golangci-lint,id=roller-derby/root/.cache/golangci-lint,sharing=locked --mount=type=cache,target=/go/pkg,id=roller-derby/go/pkg golangci-lint run --config .golangci.yml
 
+# runs golangci-lint fmt
+FROM base AS lint-golangci-lint-fmt-run
+WORKDIR /src
+COPY .golangci.yml .
+ENV GOGC=50
+RUN --mount=type=cache,target=/root/.cache/go-build,id=roller-derby/root/.cache/go-build --mount=type=cache,target=/root/.cache/golangci-lint,id=roller-derby/root/.cache/golangci-lint,sharing=locked --mount=type=cache,target=/go/pkg,id=roller-derby/go/pkg golangci-lint fmt --config .golangci.yml
+RUN --mount=type=cache,target=/root/.cache/go-build,id=roller-derby/root/.cache/go-build --mount=type=cache,target=/root/.cache/golangci-lint,id=roller-derby/root/.cache/golangci-lint,sharing=locked --mount=type=cache,target=/go/pkg,id=roller-derby/go/pkg golangci-lint run --fix --issues-exit-code 0 --config .golangci.yml
+
 # runs govulncheck
 FROM base AS lint-govulncheck
 WORKDIR /src
-RUN --mount=type=cache,target=/root/.cache/go-build,id=roller-derby/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=roller-derby/go/pkg govulncheck ./...
+COPY --chmod=0755 hack/govulncheck.sh ./hack/govulncheck.sh
+RUN --mount=type=cache,target=/root/.cache/go-build,id=roller-derby/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=roller-derby/go/pkg ./hack/govulncheck.sh ./...
 
 # runs unit-tests with race detector
 FROM base AS unit-tests-race
 WORKDIR /src
 ARG TESTPKGS
-RUN --mount=type=cache,target=/root/.cache/go-build,id=roller-derby/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=roller-derby/go/pkg --mount=type=cache,target=/tmp,id=roller-derby/tmp CGO_ENABLED=1 go test -v -race -count 1 ${TESTPKGS}
+RUN --mount=type=cache,target=/root/.cache/go-build,id=roller-derby/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=roller-derby/go/pkg --mount=type=cache,target=/tmp,id=roller-derby/tmp CGO_ENABLED=1 go test -race ${TESTPKGS}
 
 # runs unit-tests
 FROM base AS unit-tests-run
 WORKDIR /src
 ARG TESTPKGS
-RUN --mount=type=cache,target=/root/.cache/go-build,id=roller-derby/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=roller-derby/go/pkg --mount=type=cache,target=/tmp,id=roller-derby/tmp go test -v -covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} -count 1 ${TESTPKGS}
+RUN --mount=type=cache,target=/root/.cache/go-build,id=roller-derby/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=roller-derby/go/pkg --mount=type=cache,target=/tmp,id=roller-derby/tmp go test -covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} ${TESTPKGS}
 
 FROM embed-generate AS embed-abbrev-generate
 WORKDIR /src
 ARG ABBREV_TAG
 RUN echo -n 'undefined' > internal/version/data/sha && \
     echo -n ${ABBREV_TAG} > internal/version/data/tag
+
+# clean golangci-lint fmt output
+FROM scratch AS lint-golangci-lint-fmt
+COPY --from=lint-golangci-lint-fmt-run /src .
 
 FROM scratch AS unit-tests
 COPY --from=unit-tests-run /src/coverage.txt /coverage-unit-tests.txt

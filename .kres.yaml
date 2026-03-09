@@ -53,10 +53,16 @@ spec:
     enabled: true
     jobs:
       - name: dummy
+        runnerGroup: generic
         triggerLabels:
           - integration/e2e
           - integration/dummy
       - name: dummy-a
+        runnerGroup: generic
         triggerLabels:
           - integration/e2e
           - integration/dummy-a
+---
+kind: common.Repository
+spec:
+  slashMerge: true

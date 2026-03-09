@@ -1,15 +1,16 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-05-07T07:28:58Z by kres 1a0156b-dirty.
+# Generated on 2026-03-09T17:33:53Z by kres f613471-dirty.
 
 # common variables
 
 SHA := $(shell git describe --match=none --always --abbrev=8 --dirty)
 TAG := $(shell git describe --tag --always --dirty --match v[0-9]\*)
+TAG_SUFFIX ?=
 ABBREV_TAG := $(shell git describe --tags >/dev/null 2>/dev/null && git describe --tag --always --match v[0-9]\* --abbrev=0 || echo 'undefined')
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 ARTIFACTS := _out
-IMAGE_TAG ?= $(TAG)
+IMAGE_TAG ?= $(TAG)$(TAG_SUFFIX)
 OPERATING_SYSTEM := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 GOARCH := $(shell uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')
 WITH_DEBUG ?= false
@@ -17,24 +18,27 @@ WITH_RACE ?= false
 REGISTRY ?= ghcr.io
 USERNAME ?= siderolabs
 REGISTRY_AND_USERNAME ?= $(REGISTRY)/$(USERNAME)
-PROTOBUF_GO_VERSION ?= 1.36.6
-GRPC_GO_VERSION ?= 1.5.1
-GRPC_GATEWAY_VERSION ?= 2.26.3
+PROTOBUF_GO_VERSION ?= 1.36.11
+GRPC_GO_VERSION ?= 1.6.1
+GRPC_GATEWAY_VERSION ?= 2.28.0
 VTPROTOBUF_VERSION ?= 0.6.0
-GOIMPORTS_VERSION ?= 0.33.0
-GOMOCK_VERSION ?= 0.5.2
-DEEPCOPY_VERSION ?= v0.5.6
-GOLANGCILINT_VERSION ?= v2.1.6
-GOFUMPT_VERSION ?= v0.8.0
-GO_VERSION ?= 1.24.2
+GOIMPORTS_VERSION ?= 0.42.0
+GOMOCK_VERSION ?= 0.6.0
+DEEPCOPY_VERSION ?= v0.5.8
+GOLANGCILINT_VERSION ?= v2.10.1
+GOFUMPT_VERSION ?= v0.9.2
+GO_VERSION ?= 1.26.0
 GO_BUILDFLAGS ?=
+GO_BUILDTAGS ?= ,
 GO_LDFLAGS ?=
 CGO_ENABLED ?= 0
 GOTOOLCHAIN ?= local
-GOEXPERIMENT ?= synctest
+GOEXPERIMENT ?=
+GO_BUILDFLAGS += -tags $(GO_BUILDTAGS)
 TESTPKGS ?= ./...
 HELMREPO ?= $(REGISTRY)/$(USERNAME)/charts
 COSIGN_ARGS ?=
+HELMDOCS_VERSION ?= v1.14.2
 KRES_IMAGE ?= ghcr.io/siderolabs/kres:latest
 CONFORMANCE_IMAGE ?= ghcr.io/siderolabs/conform:latest
 
@@ -45,6 +49,7 @@ PLATFORM ?= linux/amd64
 PROGRESS ?= auto
 PUSH ?= false
 CI_ARGS ?=
+WITH_BUILD_DEBUG ?=
 BUILDKIT_MULTI_PLATFORM ?=
 COMMON_ARGS = --file=Dockerfile
 COMMON_ARGS += --provenance=false
@@ -74,7 +79,8 @@ COMMON_ARGS += --build-arg=DEEPCOPY_VERSION="$(DEEPCOPY_VERSION)"
 COMMON_ARGS += --build-arg=GOLANGCILINT_VERSION="$(GOLANGCILINT_VERSION)"
 COMMON_ARGS += --build-arg=GOFUMPT_VERSION="$(GOFUMPT_VERSION)"
 COMMON_ARGS += --build-arg=TESTPKGS="$(TESTPKGS)"
-TOOLCHAIN ?= docker.io/golang:1.24-alpine
+COMMON_ARGS += --build-arg=HELMDOCS_VERSION="$(HELMDOCS_VERSION)"
+TOOLCHAIN ?= docker.io/golang:1.26-alpine
 
 # help menu
 
@@ -126,6 +132,10 @@ respectively.
 
 endef
 
+ifneq (, $(filter $(WITH_BUILD_DEBUG), t true TRUE y yes 1))
+BUILD := BUILDX_EXPERIMENTAL=1 docker buildx debug --invoke /bin/sh --on error build
+endif
+
 ifneq (, $(filter $(WITH_RACE), t true TRUE y yes 1))
 GO_BUILDFLAGS += -race
 CGO_ENABLED := 1
@@ -133,7 +143,7 @@ GO_LDFLAGS += -linkmode=external -extldflags '-static'
 endif
 
 ifneq (, $(filter $(WITH_DEBUG), t true TRUE y yes 1))
-GO_BUILDFLAGS += -tags sidero.debug
+GO_BUILDTAGS := $(GO_BUILDTAGS)sidero.debug,
 else
 GO_LDFLAGS += -s
 endif
@@ -165,12 +175,19 @@ local-%:  ## Builds the specified target defined in the Dockerfile using the loc
 	    fi; \
 	  done'
 
+.PHONY: check-dirty
+check-dirty:
+	@if test -n "`git status --porcelain`"; then echo "Source tree is dirty"; git status; git diff; exit 1 ; fi
+
 generate:  ## Generate .proto definitions.
 	@$(MAKE) local-$@ DEST=./
 	@sed -i "s/appVersion: .*/appVersion: \"$$(cat internal/version/data/tag)\"/" deploy/helm/roller-derby/Chart.yaml
 
 lint-golangci-lint:  ## Runs golangci-lint linter.
 	@$(MAKE) target-$@
+
+lint-golangci-lint-fmt:  ## Runs golangci-lint formatter and tries to fix issues automatically.
+	@$(MAKE) local-$@ DEST=.
 
 lint-gofumpt:  ## Runs gofumpt linter.
 	@$(MAKE) target-$@
@@ -236,18 +253,50 @@ lint-markdown:  ## Runs markdownlint.
 .PHONY: lint
 lint: lint-golangci-lint lint-gofumpt lint-govulncheck lint-markdown  ## Run all linters for the project.
 
+.PHONY: lint-fmt
+lint-fmt: lint-golangci-lint-fmt  ## Run all linter formatters and fix up the source tree.
+
 .PHONY: image-roller-derby
 image-roller-derby:  ## Builds image for roller-derby.
 	@$(MAKE) registry-$@ IMAGE_NAME="roller-derby"
 
 .PHONY: helm
-helm:  ## Package helm chart
+helm: $(ARTIFACTS)  ## Package helm chart
 	@helm package deploy/helm/roller-derby -d $(ARTIFACTS)
 
 .PHONY: helm-release
 helm-release: helm  ## Release helm chart
 	@helm push $(ARTIFACTS)/roller-derby-*.tgz oci://$(HELMREPO) 2>&1 | tee $(ARTIFACTS)/.digest
-	@cosign sign --yes $(COSING_ARGS) $(HELMREPO)/roller-derby@$$(cat $(ARTIFACTS)/.digest | awk -F "[, ]+" '/Digest/{print $$NF}')
+	@cosign sign --yes $(COSIGN_ARGS) $(HELMREPO)/roller-derby@$$(cat $(ARTIFACTS)/.digest | awk -F "[, ]+" '/Digest/{print $$NF}')
+
+.PHONY: chart-lint
+chart-lint:  ## Lint helm chart
+	@helm lint deploy/helm/roller-derby
+
+.PHONY: helm-plugin-install
+helm-plugin-install:  ## Install helm plugins
+	-helm plugin install https://github.com/helm-unittest/helm-unittest.git --verify=false --version=v1.0.3
+	-helm plugin install https://github.com/losisin/helm-values-schema-json.git --verify=false --version=v2.3.1
+
+.PHONY: kuttl-plugin-install
+kuttl-plugin-install:  ## Install kubectl kuttl plugin
+	kubectl krew install kuttl
+
+.PHONY: chart-e2e
+chart-e2e:  ## Run helm chart e2e tests
+	export KUBECONFIG=$(shell pwd)/$(ARTIFACTS)/kubeconfig && cd deploy/helm/e2e && kubectl kuttl test
+
+.PHONY: chart-unittest
+chart-unittest: $(ARTIFACTS)  ## Run helm chart unit tests
+	@helm unittest deploy/helm/roller-derby --output-type junit --output-file $(ARTIFACTS)/helm-unittest-report.xml
+
+.PHONY: chart-gen-schema
+chart-gen-schema:  ## Generate helm chart schema
+	@helm schema --use-helm-docs --draft=7 --indent=2 --values=deploy/helm/roller-derby/values.yaml --output=deploy/helm/roller-derby/values.schema.json
+
+.PHONY: helm-docs
+helm-docs:  ## Runs helm-docs and generates chart documentation
+	@$(MAKE) local-$@ DEST=.
 
 .PHONY: dummy
 dummy:
