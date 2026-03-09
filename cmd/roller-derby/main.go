@@ -8,5 +8,5 @@ package main
 import "fmt"
 
 func main() {
-	fmt.Println("lol")
+	fmt.Println("lol2")
 }
