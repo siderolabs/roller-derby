@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-03-09T17:33:53Z by kres f613471-dirty.
+# Generated on 2026-03-10T10:48:27Z by kres undefined.
 
 # common variables
 
@@ -181,7 +181,14 @@ check-dirty:
 
 generate:  ## Generate .proto definitions.
 	@$(MAKE) local-$@ DEST=./
-	@sed -i "s/appVersion: .*/appVersion: \"$$(cat internal/version/data/tag)\"/" deploy/helm/roller-derby/Chart.yaml
+	@TAG=$$(cat internal/version/data/tag); \
+	if echo "$$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$$'; then \
+	  sed -i "s/^appVersion: .*/appVersion: \"$$TAG\"/" deploy/helm/roller-derby/Chart.yaml; \
+	  MINOR_PATCH=$$(echo "$$TAG" | sed 's/^v[0-9]*\.//'); \
+	  sed -i "s/^version: .*/version: 1.$$MINOR_PATCH/" deploy/helm/roller-derby/Chart.yaml; \
+	fi
+	@$(MAKE) helm-docs
+	@$(MAKE) chart-gen-schema
 
 lint-golangci-lint:  ## Runs golangci-lint linter.
 	@$(MAKE) target-$@

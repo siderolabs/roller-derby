@@ -13,6 +13,7 @@ kind: auto.Helm
 spec:
   enabled: true
   chartDir: deploy/helm/roller-derby
+  chartVersionMajor: 1
 ---
 kind: service.CodeCov
 spec:
