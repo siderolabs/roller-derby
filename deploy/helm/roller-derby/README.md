@@ -1,6 +1,6 @@
 # roller-derby
 
-![Version: 1.1.1](https://img.shields.io/badge/Version-1.1.1-informational?style=flat) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat) ![AppVersion: v0.1.1](https://img.shields.io/badge/AppVersion-v0.1.1-informational?style=flat)
+![Version: 1.1.2](https://img.shields.io/badge/Version-1.1.2-informational?style=flat) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat) ![AppVersion: v0.1.2](https://img.shields.io/badge/AppVersion-v0.1.2-informational?style=flat)
 
 A Helm chart for Kubernetes
 
