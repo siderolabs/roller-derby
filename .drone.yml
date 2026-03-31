@@ -270,7 +270,7 @@ steps:
 
 services:
 - name: docker
-  image: docker:24.0-dind
+  image: docker:29.3-dind
   entrypoint:
   - dockerd
   commands:
