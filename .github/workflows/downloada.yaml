@@ -18,5 +18,5 @@ jobs:
       - name: Display artifact content
         run: |
           ls
-          cat run_id.txt || true
-          cat ${ { steps.download-artifact.outputs.artifact_path } }/run_id.txt
+          cat results/run_id.txt
+          echo ${{ steps.download-artifact.outputs }}
