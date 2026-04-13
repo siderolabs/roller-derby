@@ -1,14 +1,9 @@
-concurrency:
-  group: ${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
 "on":
   schedule:
     - cron: "*/5 * * * *"
 name: upload
 jobs:
   default:
-    runs-on:
-      group: large
     steps:
       - name: create file with run id
         run: echo "run_id=${{ github.run_id }}" > run_id.txt
