@@ -1,0 +1,20 @@
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+"on":
+  schedule:
+    - cron: * * * * *
+name: artifact-uploads
+jobs:
+  default:
+    runs-on:
+      group: large
+    steps:
+      - name: save artifacts
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # version: v7.0.0
+        with:
+          name: results
+          path: |
+            CHANGELOG.md
+          retention-days: "1"
