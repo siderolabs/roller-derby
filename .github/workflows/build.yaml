@@ -3,7 +3,7 @@ concurrency:
   cancel-in-progress: true
 "on":
   schedule:
-    - cron: * * * * *
+    - cron: "* * * * *"
 name: artifact-uploads
 jobs:
   default:
