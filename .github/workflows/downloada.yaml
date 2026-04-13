@@ -14,3 +14,9 @@ jobs:
           workflow: upload.yaml
           workflow_conclusion: success
           event: schedule
+          if_no_artifact_found: fail
+      - name: Display artifact content
+        run: |
+          ls
+          cat run_id.txt || true
+          cat ${ { steps.download-artifact.outputs.artifact_path } }/run_id.txt
