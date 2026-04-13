@@ -4,7 +4,7 @@ concurrency:
 "on":
   schedule:
     - cron: "*/10 * * * *"
-name: grype-scan-cron
+name: download
 jobs:
   default:
     runs-on:
