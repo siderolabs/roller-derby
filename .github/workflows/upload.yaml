@@ -4,6 +4,7 @@
 name: upload
 jobs:
   default:
+    runs-on: ubuntu-latest
     steps:
       - name: create file with run id
         run: echo "run_id=${{ github.run_id }}" > run_id.txt
