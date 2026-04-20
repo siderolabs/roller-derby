@@ -1,0 +1,22 @@
+"on":
+  workflow_run:
+    workflows:
+      - upload
+    types:
+      - completed
+name: download
+jobs:
+  default:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        id: download-artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # version: v8.0.1
+        with:
+          name: results
+          run-id: ${{ github.event.workflow_run.id }}
+      - name: Display artifact content
+        run: |
+          ls
+          cat results/run_id.txt
+          echo ${{ steps.download-artifact.outputs }}
