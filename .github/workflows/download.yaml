@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Download artifact
         id: download-artifact
-        uses: actions/download-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # version: 7.0.0
         with:
           name: results
           run-id: ${{ github.event.workflow_run.id }}
