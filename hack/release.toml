@@ -5,6 +5,6 @@ project_name = "roller-derby"
 github_repo = "siderolabs/roller-derby"
 
 previous = "v0.1.0-alpha.9"
-pre_release = true
+pre_release = false
 
 # [notes]
