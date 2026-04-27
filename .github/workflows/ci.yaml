@@ -70,8 +70,21 @@ jobs:
         timeout-minutes: 10
       - name: dummy
         run: |
-          docker run --rm alpine/git ls-remote https://go.yaml.in/yaml/v4
-      - name: sleep if failed
-        if: failure()
+          echo
+  foo:
+    permissions:
+      actions: read
+      contents: write
+      issues: read
+      packages: write
+      pull-requests: read
+    runs-on:
+      group: generic
+    if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))
+    needs:
+      - default
+    steps:
+      - name: dummy
+        if: contains(fromJSON(needs.default.outputs.labels || []), 'integration/misc')
         run: |
-          sleep 3600
+          echo
