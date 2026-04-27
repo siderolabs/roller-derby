@@ -70,7 +70,7 @@ jobs:
         timeout-minutes: 10
       - name: dummy
         run: |
-          echo
+          exit 1
   foo:
     permissions:
       actions: read
