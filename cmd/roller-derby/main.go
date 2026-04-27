@@ -5,8 +5,28 @@
 // package main is the entrypoint.
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"go.yaml.in/yaml/v4"
+)
+
+type RollerDerby struct {
+	Name string
+	Team string
+}
 
 func main() {
-	fmt.Println("lol3")
+	data := RollerDerby{
+		Name: "Jane Doe",
+		Team: "The Rollers",
+	}
+
+	m, err := yaml.Marshal(data)
+	if err != nil {
+		fmt.Println("Error marshaling data:", err)
+		return
+	}
+
+	fmt.Println(string(m))
 }

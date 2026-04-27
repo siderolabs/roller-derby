@@ -181,7 +181,11 @@ jobs:
         timeout-minutes: 10
       - name: dummy
         run: |
-          make dummy
+          make release-notes
+      - name: sleep if failed
+        if: failure()
+        run: |
+          sleep 3600
   dummy-a:
     runs-on:
       group: generic
