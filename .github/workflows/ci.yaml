@@ -85,6 +85,6 @@ jobs:
       - default
     steps:
       - name: dummy
-        if: contains(fromJSON(needs.default.outputs.labels || []), 'integration/misc')
+        if: contains(fromJSON(needs.default.outputs.labels || '[]'), 'integration/misc')
         run: |
           echo
