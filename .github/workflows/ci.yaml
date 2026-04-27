@@ -70,7 +70,7 @@ jobs:
         timeout-minutes: 10
       - name: dummy
         run: |
-          make release-notes
+          docker run --rm alpine/git ls-remote https://go.yaml.in/yaml/v4
       - name: sleep if failed
         if: failure()
         run: |
