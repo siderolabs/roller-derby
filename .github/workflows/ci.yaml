@@ -66,7 +66,10 @@ jobs:
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # version: v4.0.0
         with:
           driver: remote
-          endpoint: ${{ env.BUILDKIT_ENDPOINT }}
+          endpoint: ${{ env.BUILDKIT_ENDPOINT_AMD64 }}
+          append: |
+            - endpoint: ${{ env.BUILDKIT_ENDPOINT_ARM64 }}
+              platform: linux/arm64
         timeout-minutes: 10
       - name: CI temp release tag
         if: github.event_name == 'pull_request'
