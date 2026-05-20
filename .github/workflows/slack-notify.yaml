@@ -15,6 +15,10 @@ jobs:
       group: generic
     if: github.event.workflow_run.conclusion != 'skipped'
     steps:
+      - name: metadata
+        run: |
+          echo ${{ toJSON(github.context) }}
+          echo ${{ toJSON(github.event) }}
       - name: Get PR number
         id: get-pr-number
         if: github.event.workflow_run.event == 'pull_request'
