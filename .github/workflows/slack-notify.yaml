@@ -19,6 +19,7 @@ jobs:
         run: |
           echo '${{ toJSON(github.context) }}'
           echo '${{ toJSON(github.event) }}'
+          sleep 100
       - name: Get PR number
         id: get-pr-number
         if: github.event.workflow_run.event == 'pull_request'
