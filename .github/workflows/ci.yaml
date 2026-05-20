@@ -37,6 +37,7 @@ jobs:
         continue-on-error: true
       - name: print-system-info
         run: |
+          exit 1
           MEMORY_GB=$((${{ steps.system-info.outputs.totalmem }}/1024/1024/1024))
 
           OUTPUTS=(
