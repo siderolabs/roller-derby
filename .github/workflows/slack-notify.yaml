@@ -17,8 +17,8 @@ jobs:
     steps:
       - name: metadata
         run: |
-          echo ${{ toJSON(github.context) }}
-          echo ${{ toJSON(github.event) }}
+          echo '${{ toJSON(github.context) }}'
+          echo '${{ toJSON(github.event) }}'
       - name: Get PR number
         id: get-pr-number
         if: github.event.workflow_run.event == 'pull_request'
